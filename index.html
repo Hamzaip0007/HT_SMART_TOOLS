@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HT Smart Tools</title>
+<meta name="description" content="Free online tools: merge PDF, compress images, QR code generator, word counter, calculators and developer tools. No sign-up, files stay in your browser.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap">
+<style>
+/* Layout: sticky header, hero with search, card grids, tool workbench panel. Blue/white, dark mode via tokens. */
+:root{
+  --bg:#f5f8ff;--surface:#ffffff;--surface2:#edf2ff;--ink:#0d1a3a;--muted:#55638a;
+  --accent:#2155e6;--accent-ink:#ffffff;--soft:#e2eaff;--line:#d8e1f5;
+  --ok:#0f7a58;--err:#c4321f;
+  --c-pdf:#2155e6;--c-image:#0b7fc4;--c-text:#4453d4;--c-qr:#0e8a8e;--c-calc:#2a6bd8;--c-dev:#5a49d2;
+  --shadow:0 1px 2px rgba(13,26,58,.06),0 10px 28px -14px rgba(33,85,230,.35);
+  --display:'Sora','Inter',system-ui,sans-serif;--body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0a1126;--surface:#121b36;--surface2:#18234a;--ink:#e8edfb;--muted:#9aa8cc;
+  --accent:#6d99ff;--accent-ink:#071030;--soft:#1b2a5a;--line:#243258;
+  --ok:#4fd1a1;--err:#ff8d7c;
+  --c-pdf:#7aa2ff;--c-image:#53b6f0;--c-text:#8f9bff;--c-qr:#4fd0d4;--c-calc:#6fa0ff;--c-dev:#a393ff;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a1126;--surface:#121b36;--surface2:#18234a;--ink:#e8edfb;--muted:#9aa8cc;
+  --accent:#6d99ff;--accent-ink:#071030;--soft:#1b2a5a;--line:#243258;
+  --ok:#4fd1a1;--err:#ff8d7c;
+  --c-pdf:#7aa2ff;--c-image:#53b6f0;--c-text:#8f9bff;--c-qr:#4fd0d4;--c-calc:#6fa0ff;--c-dev:#a393ff;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-block:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+html[lang="ur"] body{font-family:'Noto Nastaliq Urdu','Inter',system-ui,sans-serif;line-height:2.05}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--surface)}
+h1,h2,h3{font-family:var(--display);line-height:1.2;margin:0;text-wrap:balance;letter-spacing:-.01em}
+html[lang="ur"] h1,html[lang="ur"] h2,html[lang="ur"] h3{font-family:'Noto Nastaliq Urdu',var(--display);line-height:1.8}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1160px;margin-inline:auto}
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px));background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hdr-in{display:flex;align-items:center;gap:16px;min-height:62px}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:17px;white-space:nowrap}
+.logo b{color:var(--accent);font-weight:700}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.02em}
+.nav{display:flex;gap:2px;margin-inline-start:auto;flex-wrap:wrap}
+.nav a{padding:8px 11px;border-radius:9px;color:var(--muted);font-weight:500;font-size:14px}
+.nav a:hover,.nav a.on{background:var(--soft);color:var(--accent)}
+.hdr-actions{display:flex;gap:6px}
+.ib{border:1px solid var(--line);background:var(--surface);border-radius:10px;height:38px;min-width:38px;padding:0 10px;display:grid;place-items:center;cursor:pointer;font-size:13px;font-weight:600}
+.ib:hover{border-color:var(--accent);color:var(--accent)}
+.ib svg{width:18px;height:18px}
+.menu-btn{display:none}
+@media (max-width:980px){
+  .menu-btn{display:grid}
+  .nav{display:none;position:absolute;inset:62px 0 auto 0;background:var(--surface);border-bottom:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-left,0px)) 14px;flex-direction:column;margin:0}
+  .nav.open{display:flex}
+  .hdr-actions{margin-inline-start:auto}
+}
+main{padding-block:28px 56px;min-height:70vh}
+.hero{padding:44px 0 30px;text-align:center}
+.eyebrow{display:inline-flex;gap:8px;align-items:center;background:var(--soft);color:var(--accent);font-weight:600;font-size:13px;padding:6px 12px;border-radius:99px}
+.hero h1{font-size:clamp(30px,5.2vw,54px);margin:16px auto 12px;max-width:16ch}
+html[lang="ur"] .hero h1{max-width:20ch}
+.hero p{color:var(--muted);max-width:60ch;margin:0 auto 24px;font-size:16.5px}
+.sbox{position:relative;max-width:620px;margin:0 auto}
+.sbox input{width:100%;height:56px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);padding-inline:50px 16px;font-size:16px;box-shadow:var(--shadow)}
+.sbox input:focus{outline:none;border-color:var(--accent)}
+.sbox>svg{position:absolute;inset-inline-start:17px;top:17px;width:22px;height:22px;color:var(--muted)}
+.sr{position:absolute;inset-inline:0;top:62px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:20;text-align:start;overflow:hidden}
+.sr a{display:flex;gap:12px;align-items:center;padding:10px 14px}
+.sr a:hover,.sr a.hl{background:var(--soft)}
+.sr small{color:var(--muted);display:block}
+.sr .none{padding:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 13px;font-size:13.5px;color:var(--muted);cursor:pointer}
+.chip:hover,.chip.on{border-color:var(--accent);color:var(--accent);background:var(--soft)}
+section.blk{margin-top:44px}
+.sh{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.sh h2{font-size:clamp(21px,3vw,28px)}
+.sh a{color:var(--accent);font-weight:600;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{position:relative;display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;transition:transform .18s,box-shadow .18s,border-color .18s;min-width:0}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--accent)}
+.card.soon{opacity:.6;pointer-events:none}
+.ct{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ct b{font-family:var(--display);font-weight:600;font-size:15px}
+.ct span{color:var(--muted);font-size:13.5px;line-height:1.45}
+.ic{flex:none;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+.ic svg{width:22px;height:22px}
+.pdf{--c:var(--c-pdf)}.image{--c:var(--c-image)}.text{--c:var(--c-text)}.qr{--c:var(--c-qr)}.calc{--c:var(--c-calc)}.dev{--c:var(--c-dev)}
+.badge{position:absolute;top:10px;inset-inline-end:10px;font-style:normal;font-size:11px;font-weight:600;background:var(--soft);color:var(--accent);padding:2px 8px;border-radius:99px}
+.cat-card{align-items:center}
+.cat-card .ct span{font-size:13px}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.why div{background:var(--surface2);border-radius:16px;padding:20px}
+.why h3{font-size:16px;margin-bottom:6px}
+.why p{margin:0;color:var(--muted);font-size:14px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600;font-family:var(--display);font-size:15px}
+details p{color:var(--muted);margin:8px 0 0}
+.crumb{color:var(--muted);font-size:13.5px;margin-bottom:10px}
+.crumb a:hover{color:var(--accent)}
+.thead{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px}
+.thead .ic{width:54px;height:54px}
+.thead h1{font-size:clamp(24px,4vw,34px)}
+.thead p{color:var(--muted);margin:4px 0 0;max-width:64ch}
+.fav{margin-inline-start:auto}
+.fav.on{color:#e6a100;border-color:#e6a100}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.bench{display:flex;flex-direction:column;gap:14px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.split>*{min-width:0}
+@media (max-width:760px){.split{grid-template-columns:1fr}}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.lbl{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:13.5px;color:var(--muted);min-width:0}
+.inp,.ta,select{border:1.5px solid var(--line);background:var(--bg);border-radius:11px;padding:10px 12px;width:100%;color:var(--ink);font-size:14.5px}
+.inp:focus,.ta:focus,select:focus{outline:none;border-color:var(--accent)}
+.ta{resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13.5px;line-height:1.5}
+input[type=color]{height:42px;padding:3px;width:100%;border:1.5px solid var(--line);border-radius:11px;background:var(--bg);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);padding:11px 18px;border-radius:11px;font-weight:600;cursor:pointer;align-self:flex-start;font-size:14.5px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--soft);color:var(--accent)}
+.btn.sm{padding:7px 12px;font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.opts{flex-direction:row;flex-wrap:wrap;align-items:flex-end}
+.opts .lbl{flex:1 1 170px}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink);font-weight:500}
+.chk input{accent-color:var(--accent);width:17px;height:17px}
+.note{color:var(--muted);font-size:13px}
+.err{color:var(--err);margin:0;font-weight:500}
+.okk{color:var(--ok)}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px dashed color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--surface);border-radius:18px;padding:34px 16px;cursor:pointer;text-align:center;transition:background .15s}
+.drop:hover,.drop.over{background:var(--soft);border-color:var(--accent)}
+.drop svg{width:34px;height:34px;color:var(--accent)}
+.drop span{color:var(--muted);font-size:13.5px}
+.fileline{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;background:var(--surface2);padding:10px 14px;border-radius:11px}
+.fileline span{color:var(--muted);font-size:13.5px}
+.fileline b{overflow-wrap:anywhere}
+.out{display:flex;flex-direction:column;gap:10px}
+.result{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--ok);background:color-mix(in srgb,var(--ok) 9%,transparent);border-radius:12px;padding:12px 14px}
+.result div{display:flex;flex-direction:column;min-width:0}
+.result b{overflow-wrap:anywhere}
+.result span{color:var(--muted);font-size:13px}
+.list{display:flex;flex-direction:column;gap:8px}
+.li{display:flex;gap:10px;align-items:center;background:var(--surface2);border-radius:11px;padding:8px 12px}
+.li b{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:500}
+.li span{color:var(--muted);font-size:13px}
+.preview{max-width:100%;border-radius:12px;border:1px solid var(--line);background:repeating-conic-gradient(var(--surface2) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
+.center{align-items:center;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:var(--surface2);border-radius:13px;padding:12px 14px;border:1.5px solid transparent}
+.stat.f{border-color:var(--accent);background:var(--soft)}
+.stat b{display:block;font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13px}
+.big{font-family:var(--display);font-size:clamp(26px,5vw,38px);font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.keys.sci{grid-template-columns:repeat(5,1fr)}
+.key{border:1px solid var(--line);background:var(--surface);border-radius:12px;height:50px;font-size:17px;font-weight:600;cursor:pointer}
+.key:hover{border-color:var(--accent)}
+.key.op{background:var(--soft);color:var(--accent)}
+.key.eq{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.disp{font-family:var(--display);font-size:26px;text-align:end;height:56px;direction:ltr}
+.res{min-height:30px;text-align:end;color:var(--muted);font-size:20px;direction:ltr;font-variant-numeric:tabular-nums}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl td{padding:7px 4px;border-bottom:1px solid var(--line)}
+.tbl td:last-child{text-align:end;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.meter{height:10px;border-radius:9px;background:var(--surface2);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:9px;transition:width .2s}
+.sw{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sw i{height:44px;border-radius:9px;border:1px solid var(--line)}
+.prose{max-width:760px}
+.prose h2{margin:26px 0 8px;font-size:22px}
+.prose p,.prose li{color:var(--muted)}
+.foot{border-top:1px solid var(--line);margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:32px max(16px,env(safe-area-inset-left,0px)) 28px;background:var(--surface)}
+.foot-in{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:24px}
+@media (max-width:760px){.foot-in{grid-template-columns:1fr}}
+.foot h4{margin:0 0 8px;font-family:var(--display);font-size:14px}
+.foot a{display:block;color:var(--muted);padding:3px 0;font-size:14px}
+.foot a:hover{color:var(--accent)}
+.copy{margin-top:22px;color:var(--muted);font-size:13px}
+#toast{position:fixed;inset-inline:16px;bottom:max(18px,env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:440px;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;z-index:90;font-size:14px;opacity:0;transform:translateY(12px);transition:.2s;pointer-events:none;text-align:center}
+#toast.show{opacity:1;transform:none}
+canvas{max-width:100%}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head><body>
+<div id="root"></div>
+<div id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const fsize=b=>b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB';
+const MAXMB=50;
+let toastT;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3400)}
+async function copy(txt){try{await navigator.clipboard.writeText(txt);toast('Copied')}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Copied')}catch(_){toast('Copy is not available here')}ta.remove()}}
+let DL=null;
+(async()=>{try{DL=(await window.claude?.use?.('downloads'))||null}catch(e){DL=null}})();
+async function saveFile(name,data){
+  if(!DL){const b=data instanceof Blob?data:new Blob([data]),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Downloading '+name);return}
+  try{await DL.save({filename:name,data});toast('Saved '+name)}catch(e){if(!e||e.code!=='declined')toast('Could not save the file ('+((e&&e.code)||'error')+')')}
+}
+const svg=p=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+const ICON={
+  pdf:svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'),
+  image:svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/>'),
+  text:svg('<path d="M4 6h16M4 12h10M4 18h14"/>'),
+  qr:svg('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 17v4"/>'),
+  calc:svg('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>'),
+  dev:svg('<path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>'),
+  search:svg('<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'),
+  moon:svg('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>'),
+  menu:svg('<path d="M4 7h16M4 12h16M4 17h16"/>'),
+  up:svg('<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'),
+  star:svg('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>')
+};
+const CATS=['pdf','image','text','qr','calc','dev'];
+const CATNAME={en:{pdf:'PDF Tools',image:'Image Tools',text:'Text Tools',qr:'QR Code Tools',calc:'Calculators',dev:'Developer Tools'},
+  ur:{pdf:'پی ڈی ایف ٹولز',image:'تصویری ٹولز',text:'ٹیکسٹ ٹولز',qr:'کیو آر کوڈ ٹولز',calc:'کیلکولیٹرز',dev:'ڈیولپر ٹولز'}};
+const CATSHORT={pdf:'PDF',image:'Image',text:'Text',qr:'QR',calc:'Calculators',dev:'Developer'};
+const CATDESC={pdf:'Merge, split, rotate and build PDF files.',image:'Compress, resize, crop and convert images.',text:'Count, clean and transform text.',qr:'Create QR codes for links, Wi-Fi, email and more.',calc:'Everyday calculators and unit converters.',dev:'JSON, Base64, UUID, colors and encoders.'};
+
+/* ---------- translations (interface chrome) ---------- */
+const TX={
+en:{home:'Home',all:'All Tools',about:'About Us',contact:'Contact Us',privacy:'Privacy Policy',terms:'Terms & Conditions',
+ badge:'Free, no sign-up',heroH:'All Your Smart Tools in One Place',heroP:'PDF, images, text, QR codes, calculators and developer tools. Free, fast and processed right in your browser.',
+ search:'Search any tool',popular:'Popular Tools',cats:'Tool Categories',recent:'Recently Added Tools',why:'Why Choose HT Smart Tools?',faq:'Frequently Asked Questions',
+ viewAll:'View all',tools:'tools',related:'Related tools',used:'Recently used',favs:'Your favorites',none:'No tool matches that search.',soon:'Coming soon',
+ w:[['Free to use','Every basic tool is free. No account, no watermark.'],['Private by design','Files are processed in your browser. Nothing is uploaded.'],['Fast and light','No installs and no waiting on a server for most tasks.'],['Works everywhere','Phone, tablet and desktop, in English and Urdu.']],
+ q:[['Are the tools really free?','Yes. All basic tools are free and need no account.'],['Are my files uploaded anywhere?','No. In this version every tool runs inside your browser, so your files and text stay on your device.'],['Does it work on my phone?','Yes. The layout adapts to phones, tablets and desktops.'],['Which languages are supported?','English by default, with an Urdu interface. More languages can be added later.'],['Can I ask for a new tool?','Yes. Send your idea through the Contact page.']],
+ foot:'Free online tools for everyday digital tasks.'},
+ur:{home:'ہوم',all:'تمام ٹولز',about:'ہمارے بارے میں',contact:'رابطہ کریں',privacy:'پرائیویسی پالیسی',terms:'شرائط و ضوابط',
+ badge:'مفت، سائن اپ کے بغیر',heroH:'آپ کے تمام اسمارٹ ٹولز ایک ہی جگہ',heroP:'پی ڈی ایف، تصاویر، متن، کیو آر کوڈ، کیلکولیٹرز اور ڈیولپر ٹولز۔ مفت، تیز اور براہِ راست آپ کے براؤزر میں۔',
+ search:'کوئی بھی ٹول تلاش کریں',popular:'مقبول ٹولز',cats:'ٹولز کی اقسام',recent:'حال ہی میں شامل ہونے والے ٹولز',why:'ایچ ٹی اسمارٹ ٹولز کیوں؟',faq:'اکثر پوچھے جانے والے سوالات',
+ viewAll:'سب دیکھیں',tools:'ٹولز',related:'متعلقہ ٹولز',used:'حال ہی میں استعمال کیے',favs:'آپ کے پسندیدہ',none:'اس تلاش سے کوئی ٹول نہیں ملا۔',soon:'جلد آ رہا ہے',
+ w:[['مفت استعمال','تمام بنیادی ٹولز مفت ہیں۔ اکاؤنٹ یا واٹر مارک کی ضرورت نہیں۔'],['پرائیویسی پہلے','فائلیں آپ کے براؤزر میں ہی پروسیس ہوتی ہیں۔ کچھ اپلوڈ نہیں ہوتا۔'],['تیز اور ہلکا','کسی انسٹال کے بغیر، زیادہ تر کام فوراً ہو جاتے ہیں۔'],['ہر ڈیوائس پر','فون، ٹیبلیٹ اور ڈیسک ٹاپ پر، انگریزی اور اردو میں۔']],
+ q:[['کیا ٹولز واقعی مفت ہیں؟','جی ہاں۔ تمام بنیادی ٹولز مفت ہیں اور اکاؤنٹ کی ضرورت نہیں۔'],['کیا میری فائلیں کہیں اپلوڈ ہوتی ہیں؟','نہیں۔ اس ورژن میں ہر ٹول آپ کے براؤزر کے اندر چلتا ہے، اس لیے فائلیں اور متن آپ کی ڈیوائس پر رہتے ہیں۔'],['کیا یہ فون پر چلتا ہے؟','جی ہاں۔ ڈیزائن فون، ٹیبلیٹ اور ڈیسک ٹاپ کے مطابق ڈھل جاتا ہے۔'],['کون سی زبانیں دستیاب ہیں؟','انگریزی بطور ڈیفالٹ اور اردو انٹرفیس۔ مزید زبانیں بعد میں شامل ہو سکتی ہیں۔'],['کیا میں نئے ٹول کی فرمائش کر سکتا ہوں؟','جی ہاں۔ رابطہ صفحے کے ذریعے اپنا آئیڈیا بھیجیں۔']],
+ foot:'روزمرہ ڈیجیٹل کاموں کے لیے مفت آن لائن ٹولز۔'}
+};
+let LANG=store.get('ht-lang','en');
+const tr=k=>(TX[LANG]&&TX[LANG][k])||TX.en[k];
+const catN=c=>CATNAME[LANG][c];
+
+/* ---------- shared UI pieces ---------- */
+function matches(file,accept){return accept.split(',').map(s=>s.trim()).some(a=>a.startsWith('.')?file.name.toLowerCase().endsWith(a):a.endsWith('/*')?file.type.startsWith(a.slice(0,-1)):file.type===a)}
+function dropzone(host,{accept,multiple,label,onFiles}){
+  host.innerHTML='<label class="drop" tabindex="0">'+ICON.up+'<b>'+esc(label||'Drop files here')+'</b><span>or click to browse · max '+MAXMB+' MB per file</span><input type="file" hidden '+(multiple?'multiple ':'')+'accept="'+esc(accept)+'"></label>';
+  const d=$('.drop',host),inp=$('input',host);
+  const take=fl=>{
+    const ok=[];for(const f of fl){
+      if(!matches(f,accept)){toast(f.name+' is not a supported file type.');continue}
+      if(f.size>MAXMB*1048576){toast(f.name+' is larger than '+MAXMB+' MB.');continue}
+      if(!f.size){toast(f.name+' is empty.');continue}
+      ok.push(f)}
+    if(ok.length)onFiles(multiple?ok:[ok[0]])};
+  inp.onchange=()=>{take(inp.files);inp.value=''};
+  d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click()}};
+  ['dragenter','dragover'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add('over')}));
+  ['dragleave','drop'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove('over')}));
+  d.addEventListener('drop',e=>take(e.dataTransfer.files));
+}
+function showResult(out,name,data,note){
+  const blob=data instanceof Blob?data:new Blob([data]);
+  const d=document.createElement('div');d.className='result';
+  d.innerHTML='<div><b>'+esc(name)+'</b><span>'+fsize(blob.size)+(note?' · '+esc(note):'')+'</span></div><button class="btn">Download</button>';
+  $('button',d).onclick=()=>saveFile(name,blob);out.appendChild(d);
+}
+const baseName=f=>f.name.replace(/\.[^.]+$/,'');
+function field(id,label,attrs){return '<label class="lbl">'+label+'<input class="inp" id="'+id+'" '+(attrs||'')+'></label>'}
+
+/* ---------- PDF tools ---------- */
+const PL=()=>{if(!window.PDFLib)throw new Error('The PDF engine did not load. Check your connection and reload.');return window.PDFLib};
+async function readPdf(file){return PL().PDFDocument.load(await file.arrayBuffer(),{ignoreEncryption:true})}
+function parseRanges(str,n){
+  const groups=[];
+  for(const part of str.split(',').map(s=>s.trim()).filter(Boolean)){
+    const m=part.match(/^(\d+)(?:\s*-\s*(\d+))?$/);if(!m)throw new Error('Not a valid range: "'+part+'". Use numbers like 1-3, 5.');
+    let a=+m[1],b=m[2]?+m[2]:a;if(a>b)[a,b]=[b,a];
+    if(a<1||b>n)throw new Error('Page '+(a<1?a:b)+' is outside this PDF (1 to '+n+').');
+    const g=[];for(let i=a;i<=b;i++)g.push(i-1);groups.push(g)}
+  if(!groups.length)throw new Error('Enter the pages you want, for example 1-3, 5.');
+  return groups;
+}
+function pdfSingle(el,{range,rangeLabel,placeholder,optional,extra,btn,run}){
+  el.innerHTML='<div class="dz"></div><div class="panel" id="pp" hidden></div>';
+  dropzone($('.dz',el),{accept:'.pdf,application/pdf',label:'Drop your PDF here',onFiles:async fs=>{
+    const f=fs[0];let doc;
+    try{doc=await readPdf(f)}catch(e){toast(e.message.includes('engine')?e.message:'This PDF could not be opened. It may be damaged or password protected.');return}
+    const n=doc.getPageCount(),pp=$('#pp',el);pp.hidden=false;
+    pp.innerHTML='<div class="fileline"><b>'+esc(f.name)+'</b><span>'+n+' pages · '+fsize(f.size)+'</span></div>'+
+      (range?field('rg',rangeLabel,'placeholder="'+placeholder+'"'):'')+(extra||'')+'<button class="btn" id="go">'+btn+'</button><div class="out" id="out"></div>';
+    $('#go',pp).onclick=async()=>{
+      const out=$('#out',pp);out.innerHTML='';
+      try{const v=range?$('#rg',pp).value.trim():'';await run({doc,file:f,n,pp,out,groups:range&&(v||!optional)?parseRanges(v,n):null})}
+      catch(e){out.innerHTML='<p class="err">'+esc(e.message)+'</p>'}};
+  }});
+}
+function multiList(el,{accept,label,btn,minItems,extra,run}){
+  let items=[];
+  el.innerHTML='<div class="dz"></div><div class="panel" id="pp" hidden><div class="list" id="lst"></div>'+(extra||'')+'<button class="btn" id="go">'+btn+'</button><div class="out" id="out"></div></div>';
+  const lst=$('#lst',el),pp=$('#pp',el);
+  const draw=()=>{
+    pp.hidden=!items.length;
+    lst.innerHTML=items.map((f,i)=>'<div class="li"><span>'+(i+1)+'</span><b>'+esc(f.name)+'</b><span>'+fsize(f.size)+'</span><button class="btn ghost sm" data-a="u" data-i="'+i+'" aria-label="Move up">↑</button><button class="btn ghost sm" data-a="d" data-i="'+i+'" aria-label="Move down">↓</button><button class="btn ghost sm" data-a="x" data-i="'+i+'" aria-label="Remove">✕</button></div>').join('')};
+  lst.onclick=e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.i,a=b.dataset.a;
+    if(a==='x')items.splice(i,1);
+    if(a==='u'&&i>0)[items[i-1],items[i]]=[items[i],items[i-1]];
+    if(a==='d'&&i<items.length-1)[items[i+1],items[i]]=[items[i],items[i+1]];draw()};
+  dropzone($('.dz',el),{accept,multiple:true,label,onFiles:fs=>{items=items.concat(fs);draw()}});
+  $('#go',el).onclick=async()=>{const out=$('#out',el);out.innerHTML='';
+    if(items.length<minItems){out.innerHTML='<p class="err">Add at least '+minItems+' file'+(minItems>1?'s':'')+'.</p>';return}
+    try{await run(items,out,pp)}catch(e){out.innerHTML='<p class="err">'+esc(e.message)+'</p>'}};
+}
+const pdfBytes=async d=>new Blob([await d.save()],{type:'application/pdf'});
+function toolMerge(el){multiList(el,{accept:'.pdf,application/pdf',label:'Drop PDF files here',btn:'Merge PDFs',minItems:2,run:async(items,out)=>{
+  const out_=await PL().PDFDocument.create();
+  for(const f of items){const d=await readPdf(f);(await out_.copyPages(d,d.getPageIndices())).forEach(p=>out_.addPage(p))}
+  showResult(out,'merged.pdf',await pdfBytes(out_),out_.getPageCount()+' pages')}})}
+function toolSplit(el){pdfSingle(el,{range:true,rangeLabel:'Split into these parts (each comma-separated part becomes its own PDF)',placeholder:'1-3, 4-6, 7',btn:'Split PDF',run:async({doc,file,groups,out})=>{
+  let i=0;for(const g of groups){const nd=await PL().PDFDocument.create();(await nd.copyPages(doc,g)).forEach(p=>nd.addPage(p));i++;
+    showResult(out,baseName(file)+'-part'+i+'.pdf',await pdfBytes(nd),g.length+' page'+(g.length>1?'s':''))}}})}
+function toolExtract(el){pdfSingle(el,{range:true,rangeLabel:'Pages to keep',placeholder:'1-3, 5',btn:'Extract pages',run:async({doc,file,groups,out})=>{
+  const nd=await PL().PDFDocument.create();const idx=[...new Set(groups.flat())];(await nd.copyPages(doc,idx)).forEach(p=>nd.addPage(p));
+  showResult(out,baseName(file)+'-extracted.pdf',await pdfBytes(nd),idx.length+' pages')}})}
+function toolDelete(el){pdfSingle(el,{range:true,rangeLabel:'Pages to delete',placeholder:'2, 4-5',btn:'Delete pages',run:async({doc,file,groups,n,out})=>{
+  const del=new Set(groups.flat());if(del.size>=n)throw new Error('That would remove every page. Keep at least one.');
+  const keep=doc.getPageIndices().filter(i=>!del.has(i));const nd=await PL().PDFDocument.create();(await nd.copyPages(doc,keep)).forEach(p=>nd.addPage(p));
+  showResult(out,baseName(file)+'-edited.pdf',await pdfBytes(nd),keep.length+' pages left')}})}
+function toolRotatePdf(el){pdfSingle(el,{range:true,optional:true,rangeLabel:'Pages to rotate (leave empty for all pages)',placeholder:'all pages',
+  extra:'<label class="lbl">Rotation<select id="ang"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">90° counter-clockwise</option></select></label>',btn:'Rotate PDF',
+  run:async({doc,file,groups,pp,out})=>{const a=+$('#ang',pp).value;const set=groups?new Set(groups.flat()):null;
+    doc.getPages().forEach((p,i)=>{if(!set||set.has(i))p.setRotation(PL().degrees((p.getRotation().angle+a)%360))});
+    showResult(out,baseName(file)+'-rotated.pdf',await pdfBytes(doc))}})}
+function canvasBlob(c,type,q){return new Promise(r=>c.toBlob(r,type,q))}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>res({img:i,url:u});i.onerror=()=>rej(new Error('This image could not be read.'));i.src=u})}
+function toolJpgPdf(el){multiList(el,{accept:'image/*',label:'Drop images here',btn:'Create PDF',minItems:1,
+  extra:'<label class="lbl">Page size<select id="ps"><option value="a4">A4, image fitted with margin</option><option value="orig">Same size as each image</option></select></label>',
+  run:async(items,out,pp)=>{const pdf=await PL().PDFDocument.create();const mode=$('#ps',pp).value;
+    for(const f of items){let bytes,emb;const buf=new Uint8Array(await f.arrayBuffer());
+      if(f.type==='image/jpeg')emb=await pdf.embedJpg(buf);
+      else if(f.type==='image/png')emb=await pdf.embedPng(buf);
+      else{const {img}=await loadImg(f);const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);
+        emb=await pdf.embedPng(new Uint8Array(await (await canvasBlob(c,'image/png')).arrayBuffer()))}
+      if(mode==='orig'){const pg=pdf.addPage([emb.width,emb.height]);pg.drawImage(emb,{x:0,y:0,width:emb.width,height:emb.height})}
+      else{const W=595.28,H=841.89,m=28,s=Math.min((W-2*m)/emb.width,(H-2*m)/emb.height,1.5);const w=emb.width*s,h=emb.height*s;
+        const pg=pdf.addPage([W,H]);pg.drawImage(emb,{x:(W-w)/2,y:(H-h)/2,width:w,height:h})}}
+    showResult(out,'images.pdf',await pdfBytes(pdf),pdf.getPageCount()+' pages')}})}
+
+/* ---------- Image tools ---------- */
+function mkCanvas(w,h,bg){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));const x=c.getContext('2d');if(bg){x.fillStyle=bg;x.fillRect(0,0,c.width,c.height)}return [c,x]}
+const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
+async function encode(c,type,q){const b=await canvasBlob(c,type,q);if(!b||b.type!==type)throw new Error('Your browser cannot create '+EXT[type].toUpperCase()+' files. Try another format.');return b}
+function imgSingle(el,{accept,label,btn,extra,setup,run}){
+  el.innerHTML='<div class="dz"></div><div class="panel" id="pp" hidden></div>';
+  dropzone($('.dz',el),{accept:accept||'image/*',label:label||'Drop your image here',onFiles:async fs=>{
+    const f=fs[0];let L;try{L=await loadImg(f)}catch(e){toast(e.message);return}
+    const pp=$('#pp',el);pp.hidden=false;
+    pp.innerHTML='<div class="fileline"><b>'+esc(f.name)+'</b><span>'+L.img.naturalWidth+' × '+L.img.naturalHeight+' px · '+fsize(f.size)+'</span></div>'+(extra||'')+(btn?'<button class="btn" id="go">'+btn+'</button>':'')+'<div class="out" id="out"></div>';
+    const ctx={img:L.img,file:f,pp,out:$('#out',pp),w:L.img.naturalWidth,h:L.img.naturalHeight,base:baseName(f)};
+    if(setup)setup(ctx);
+    if(btn)$('#go',pp).onclick=async()=>{ctx.out.innerHTML='';try{await run(ctx)}catch(e){ctx.out.innerHTML='<p class="err">'+esc(e.message)+'</p>'}};
+  }});
+}
+function toolCompress(el){imgSingle(el,{btn:'Compress image',
+  extra:'<div class="grid2"><label class="lbl">Output format<select id="fm"><option value="image/jpeg">JPG</option><option value="image/webp">WEBP</option></select></label>'+
+  '<label class="lbl">Quality: <span id="qv">70</span>%<input type="range" id="q" min="10" max="95" value="70"></label>'+field('mw','Max width (px, optional)','type="number" min="16" placeholder="keep original"')+'</div>',
+  setup:c=>{const q=$('#q',c.pp);q.oninput=()=>$('#qv',c.pp).textContent=q.value},
+  run:async c=>{const pp=c.pp,type=$('#fm',pp).value,q=+$('#q',pp).value/100,mw=+$('#mw',pp).value||0;let w=c.w,h=c.h;if(mw&&w>mw){h=h*mw/w;w=mw}
+    const [cv,x]=mkCanvas(w,h,type==='image/jpeg'?'#fff':null);x.drawImage(c.img,0,0,cv.width,cv.height);const b=await encode(cv,type,q);
+    const saved=Math.round((1-b.size/c.file.size)*100);
+    showResult(c.out,c.base+'-compressed.'+EXT[type],b,fsize(c.file.size)+' to '+fsize(b.size)+(saved>0?' ('+saved+'% smaller)':' (not smaller, try lower quality)'))}})}
+function toolResize(el){imgSingle(el,{btn:'Resize image',
+  extra:'<div class="grid2">'+field('rw','Width (px)','type="number" min="1"')+field('rh','Height (px)','type="number" min="1"')+
+  '<label class="lbl">Output format<select id="fm"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WEBP</option></select></label></div>'+
+  '<label class="chk"><input type="checkbox" id="lk" checked> Keep aspect ratio</label>',
+  setup:c=>{const rw=$('#rw',c.pp),rh=$('#rh',c.pp),lk=$('#lk',c.pp);rw.value=c.w;rh.value=c.h;
+    rw.oninput=()=>{if(lk.checked)rh.value=Math.round(rw.value*c.h/c.w)||''};rh.oninput=()=>{if(lk.checked)rw.value=Math.round(rh.value*c.w/c.h)||''}},
+  run:async c=>{const w=+$('#rw',c.pp).value,h=+$('#rh',c.pp).value,type=$('#fm',c.pp).value;if(!(w>0&&h>0))throw new Error('Enter a width and height.');if(w*h>1.6e7)throw new Error('That size is too large for the browser. Try under 16 megapixels.');
+    const [cv,x]=mkCanvas(w,h,type==='image/jpeg'?'#fff':null);x.imageSmoothingQuality='high';x.drawImage(c.img,0,0,cv.width,cv.height);
+    showResult(c.out,c.base+'-'+cv.width+'x'+cv.height+'.'+EXT[type],await encode(cv,type,.92),cv.width+' × '+cv.height+' px')}})}
+function toolCrop(el){imgSingle(el,{btn:'Crop image',
+  extra:'<canvas id="pv" class="preview"></canvas><div class="grid2">'+field('cx','X (px)','type="number" min="0"')+field('cy','Y (px)','type="number" min="0"')+field('cw','Width (px)','type="number" min="1"')+field('ch','Height (px)','type="number" min="1"')+'</div>',
+  setup:c=>{const pv=$('#pv',c.pp),s=Math.min(1,560/c.w);pv.width=c.w*s;pv.height=c.h*s;
+    const f={x:'cx',y:'cy',w:'cw',h:'ch'},def={x:Math.round(c.w*.1),y:Math.round(c.h*.1),w:Math.round(c.w*.8),h:Math.round(c.h*.8)};
+    for(const k in f)$('#'+f[k],c.pp).value=def[k];
+    const draw=()=>{const x=pv.getContext('2d');x.drawImage(c.img,0,0,pv.width,pv.height);const r={x:+$('#cx',c.pp).value*s,y:+$('#cy',c.pp).value*s,w:+$('#cw',c.pp).value*s,h:+$('#ch',c.pp).value*s};
+      x.fillStyle='rgba(8,16,48,.55)';x.beginPath();x.rect(0,0,pv.width,pv.height);x.rect(r.x,r.y,r.w,r.h);x.fill('evenodd');x.strokeStyle='#fff';x.lineWidth=2;x.strokeRect(r.x,r.y,r.w,r.h)};
+    c.pp.addEventListener('input',draw);draw()},
+  run:async c=>{const x=Math.max(0,+$('#cx',c.pp).value),y=Math.max(0,+$('#cy',c.pp).value),w=Math.min(+$('#cw',c.pp).value,c.w-x),h=Math.min(+$('#ch',c.pp).value,c.h-y);
+    if(!(w>0&&h>0))throw new Error('The crop area is outside the image.');const [cv,g]=mkCanvas(w,h);g.drawImage(c.img,x,y,w,h,0,0,w,h);
+    showResult(c.out,c.base+'-cropped.png',await encode(cv,'image/png'),Math.round(w)+' × '+Math.round(h)+' px')}})}
+function toolConvert(el,{accept,target,label}){
+  imgSingle(el,{accept,label,btn:'Convert image',extra:target?'':'<label class="lbl">Convert to<select id="fm"><option value="image/webp">WEBP</option><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select></label>',
+  run:async c=>{const type=target||$('#fm',c.pp).value;const [cv,x]=mkCanvas(c.w,c.h,type==='image/jpeg'?'#fff':null);x.drawImage(c.img,0,0);
+    showResult(c.out,c.base+'.'+EXT[type],await encode(cv,type,.92),'converted to '+EXT[type].toUpperCase())}})}
+function toolRotateImg(el){imgSingle(el,{btn:'Download rotated image',
+  extra:'<div class="row"><button class="btn ghost sm" data-r="l">↺ Rotate left</button><button class="btn ghost sm" data-r="r">↻ Rotate right</button><button class="btn ghost sm" data-r="h">⇋ Flip horizontal</button><button class="btn ghost sm" data-r="v">⇅ Flip vertical</button></div><canvas id="pv" class="preview"></canvas>',
+  setup:c=>{const st={rot:0,fh:false,fv:false};c.st=st;
+    c.render=(maxw)=>{const sw=st.rot%2===1,W=sw?c.h:c.w,H=sw?c.w:c.h,s=maxw?Math.min(1,maxw/W):1;const [cv,x]=mkCanvas(W*s,H*s);x.translate(cv.width/2,cv.height/2);x.rotate(st.rot*Math.PI/2);x.scale(st.fh?-1:1,st.fv?-1:1);x.drawImage(c.img,-c.w*s/2,-c.h*s/2,c.w*s,c.h*s);return cv};
+    const draw=()=>{const pv=$('#pv',c.pp),r=c.render(560);pv.width=r.width;pv.height=r.height;pv.getContext('2d').drawImage(r,0,0)};
+    $$('[data-r]',c.pp).forEach(b=>b.onclick=()=>{const k=b.dataset.r;if(k==='l')st.rot=(st.rot+3)%4;if(k==='r')st.rot=(st.rot+1)%4;if(k==='h')st.fh=!st.fh;if(k==='v')st.fv=!st.fv;draw()});draw()},
+  run:async c=>{showResult(c.out,c.base+'-rotated.png',await encode(c.render(0),'image/png'))}})}
+
+/* ---------- Text tools ---------- */
+function textIO(el,o){
+  el.innerHTML=(o.opts?'<div class="panel opts">'+o.opts+'</div>':'')+'<div class="split"><label class="lbl">'+(o.inL||'Your text')+'<textarea id="in" class="ta" rows="10" spellcheck="false"></textarea></label><label class="lbl">'+(o.outL||'Result')+'<textarea id="ot" class="ta" rows="10" readonly></textarea></label></div><div class="row"><button class="btn" id="cp">Copy result</button><button class="btn ghost" id="cl">Clear</button><span class="note" id="nt"></span></div>';
+  const inp=$('#in',el),ot=$('#ot',el),nt=$('#nt',el);
+  const g=n=>{const e=$('[name="'+n+'"]',el);return e?(e.type==='checkbox'?e.checked:e.value):null};
+  const run=()=>{let r;try{r=o.fn(inp.value,g)}catch(e){r={text:'',note:e.message}}if(typeof r==='object'){nt.textContent=r.note||'';r=r.text}else nt.textContent='';ot.value=r};
+  el.addEventListener('input',run);el.addEventListener('change',run);inp.value=o.sample||'';run();
+  $('#cp',el).onclick=()=>copy(ot.value);$('#cl',el).onclick=()=>{inp.value='';run();inp.focus()};
+}
+const SAMPLE='HT Smart Tools brings everyday utilities together.   Edit this sample text, or paste your own.\nEach tool works instantly in your browser.\n\nEach tool works instantly in your browser.';
+function toolCounter(el,focus){
+  el.innerHTML='<label class="lbl">Your text<textarea id="in" class="ta" rows="9" spellcheck="false"></textarea></label><div class="stats" id="st"></div>';
+  const inp=$('#in',el);
+  const run=()=>{const t=inp.value,tt=t.trim();
+    const words=tt?tt.split(/\s+/).length:0,chars=[...t].length,nos=[...t.replace(/\s/g,'')].length,
+      sent=(t.match(/[^.!?۔]+[.!?۔]+|[^.!?۔]+$/g)||[]).filter(s=>s.trim()).length,paras=tt?tt.split(/\n\s*\n/).filter(s=>s.trim()).length:0,lines=t?t.split('\n').length:0,mins=Math.max(words?1:0,Math.ceil(words/200));
+    const S=[['words','Words',words],['chars','Characters',chars],['nos','Characters (no spaces)',nos],['sent','Sentences',sent],['paras','Paragraphs',paras],['lines','Lines',lines],['read','Reading time (min)',mins]];
+    $('#st',el).innerHTML=S.map(s=>'<div class="stat'+(s[0]===focus?' f':'')+'"><b>'+s[2]+'</b><span>'+s[1]+'</span></div>').join('')};
+  inp.oninput=run;inp.value=SAMPLE;run();
+}
+const wordsOf=s=>s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const CASES={upper:s=>s.toUpperCase(),lower:s=>s.toLowerCase(),
+  title:s=>s.toLowerCase().replace(/(^|[\s\-(])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()),
+  sentence:s=>s.toLowerCase().replace(/(^\s*|[.!?]\s+|\n\s*)(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()),
+  camel:s=>wordsOf(s).map((w,i)=>i?w[0].toUpperCase()+w.slice(1):w).join(''),
+  snake:s=>wordsOf(s).join('_'),kebab:s=>wordsOf(s).join('-')};
+function toolCase(el,only){textIO(el,{sample:'Change the case of this text with one click.',
+  opts:only?'':'<label class="lbl">Convert to<select name="mode"><option value="upper">UPPERCASE</option><option value="lower">lowercase</option><option value="title">Title Case</option><option value="sentence">Sentence case</option><option value="camel">camelCase</option><option value="snake">snake_case</option><option value="kebab">kebab-case</option></select></label>',
+  fn:(t,g)=>CASES[only||g('mode')](t)})}
+function toolSpaces(el){textIO(el,{sample:'  Too    many   spaces   here.  \n\n\n   Another   line   with    gaps.   ',
+  opts:'<label class="chk"><input type="checkbox" name="c" checked> Collapse repeated spaces</label><label class="chk"><input type="checkbox" name="t" checked> Trim line edges</label><label class="chk"><input type="checkbox" name="b" checked> Remove empty lines</label>',
+  fn:(t,g)=>{let l=t.split('\n');if(g('c'))l=l.map(x=>x.replace(/[ \t]{2,}/g,' '));if(g('t'))l=l.map(x=>x.trim());if(g('b'))l=l.filter(x=>x.trim());return l.join('\n')}})}
+function toolDedupe(el){textIO(el,{sample:'apple\nbanana\nApple\ncherry\nbanana\ncherry',
+  opts:'<label class="chk"><input type="checkbox" name="ci" checked> Ignore upper/lower case</label><label class="chk"><input type="checkbox" name="tr" checked> Ignore spaces at line edges</label>',
+  fn:(t,g)=>{const seen=new Set(),out=[];let removed=0;for(const line of t.split('\n')){let k=g('tr')?line.trim():line;if(g('ci'))k=k.toLowerCase();if(seen.has(k)){removed++;continue}seen.add(k);out.push(line)}return{text:out.join('\n'),note:removed+' duplicate line'+(removed===1?'':'s')+' removed'}}})}
+function toolReverse(el){textIO(el,{sample:'Reverse this sentence.',
+  opts:'<label class="lbl">Reverse<select name="m"><option value="c">Every character</option><option value="w">Order of words</option><option value="l">Order of lines</option></select></label>',
+  fn:(t,g)=>{const m=g('m');return m==='c'?[...t].reverse().join(''):m==='w'?t.split(/\s+/).reverse().join(' '):t.split('\n').reverse().join('\n')}})}
+function toolFormatter(el){textIO(el,{sample:'  pear \n\nbanana\n apple\n',
+  opts:'<label class="chk"><input type="checkbox" name="tr" checked> Trim each line</label><label class="chk"><input type="checkbox" name="bl" checked> Remove empty lines</label><label class="lbl">Sort<select name="so"><option value="">Keep order</option><option value="az">A to Z</option><option value="za">Z to A</option></select></label><label class="chk"><input type="checkbox" name="nu"> Number lines</label><label class="chk"><input type="checkbox" name="qu"> Wrap in quotes</label>',
+  fn:(t,g)=>{let l=t.split('\n');if(g('tr'))l=l.map(x=>x.trim());if(g('bl'))l=l.filter(x=>x.trim());const s=g('so');if(s)l.sort((a,b)=>a.localeCompare(b));if(s==='za')l.reverse();if(g('qu'))l=l.map(x=>'"'+x+'"');if(g('nu'))l=l.map((x,i)=>(i+1)+'. '+x);return l.join('\n')}})}
+
+/* ---------- QR tools ---------- */
+function toolQR(el,preset){
+  const TY={url:'Website URL',text:'Text',wifi:'Wi-Fi network',email:'Email',phone:'Phone number'};
+  const FIELDS={url:field('f1','Web address','value="https://htsmarttools.com"'),text:'<label class="lbl">Text<textarea class="ta" id="f1" rows="4">Hello from HT Smart Tools</textarea></label>',
+    wifi:field('f1','Network name (SSID)','value="HomeWiFi"')+field('f2','Password','value=""')+'<label class="lbl">Security<select id="f3"><option>WPA</option><option>WEP</option><option value="nopass">None</option></select></label>',
+    email:field('f1','Email address','value="hello@example.com"')+field('f2','Subject (optional)','')+field('f3','Message (optional)',''),
+    phone:field('f1','Phone number','value="+923001234567"')};
+  el.innerHTML='<div class="split"><div class="panel">'+(preset?'':'<label class="lbl">QR code type<select id="ty">'+Object.keys(TY).map(k=>'<option value="'+k+'">'+TY[k]+'</option>').join('')+'</select></label>')+
+    '<div id="fields" class="panel" style="padding:0;border:0"></div><div class="grid2"><label class="lbl">Dots<input type="color" id="fg" value="#0b2a7a"></label><label class="lbl">Background<input type="color" id="bg" value="#ffffff"></label></div>'+
+    '<label class="lbl">Size: <span id="szv">400</span> px<input type="range" id="sz" min="200" max="1000" step="50" value="400"></label>'+
+    '<label class="lbl">Error correction<select id="ec"><option value="L">Low</option><option value="M" selected>Medium</option><option value="Q">Quartile</option><option value="H">High (use with logos)</option></select></label></div>'+
+    '<div class="panel center"><canvas id="cv" width="400" height="400" class="preview" style="background:#fff"></canvas><div class="row"><button class="btn" id="dp">Download PNG</button><button class="btn ghost" id="ds">Download SVG</button></div><p class="note" id="qn"></p></div></div>';
+  let type=preset||'url',mods=null;
+  const fld=()=>{$('#fields',el).innerHTML=FIELDS[type]};
+  const esc2=s=>s.replace(/([\\;,:"])/g,'\\$1');
+  const payload=()=>{const v=i=>($('#f'+i,el)||{value:''}).value.trim();
+    if(!v(1))return '';
+    if(type==='wifi'){const sec=v(3)||'WPA';return 'WIFI:T:'+(sec==='nopass'?'nopass':sec)+';S:'+esc2(v(1))+';'+(sec==='nopass'?'':'P:'+esc2(v(2))+';')+';'}
+    if(type==='email'){const q=[];if(v(2))q.push('subject='+encodeURIComponent(v(2)));if(v(3))q.push('body='+encodeURIComponent(v(3)));return 'mailto:'+v(1)+(q.length?'?'+q.join('&'):'')}
+    if(type==='phone')return 'tel:'+v(1).replace(/\s/g,'');
+    if(type==='url')return /^[a-z][a-z0-9+.-]*:/i.test(v(1))?v(1):'https://'+v(1);
+    return $('#f1',el).value};
+  const draw=()=>{
+    const cv=$('#cv',el),qn=$('#qn',el);qn.textContent='';mods=null;const data=payload(),px=+$('#sz',el).value;
+    cv.width=cv.height=px;cv.style.width=Math.min(px,340)+'px';cv.style.height=Math.min(px,340)+'px';const x=cv.getContext('2d');x.fillStyle=$('#bg',el).value;x.fillRect(0,0,px,px);
+    if(typeof qrcode==='undefined'){qn.textContent='The QR engine did not load. Check your connection and reload.';return}
+    if(!data){qn.textContent='Fill in the field to create a code.';return}
+    let qr;try{qr=qrcode(0,$('#ec',el).value);qr.addData(data);qr.make()}catch(e){qn.textContent='That is too much data for one QR code.';return}
+    const n=qr.getModuleCount(),q=4,cell=px/(n+2*q);x.fillStyle=$('#fg',el).value;
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c)){const x0=Math.floor((c+q)*cell),y0=Math.floor((r+q)*cell);x.fillRect(x0,y0,Math.floor((c+q+1)*cell)-x0,Math.floor((r+q+1)*cell)-y0)}
+    mods={qr,n,q}};
+  const svgStr=()=>{const {qr,n,q}=mods,T=n+2*q;let d='';for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))d+='M'+(c+q)+' '+(r+q)+'h1v1h-1z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+T+' '+T+'" width="'+$('#sz',el).value+'" height="'+$('#sz',el).value+'" shape-rendering="crispEdges"><rect width="'+T+'" height="'+T+'" fill="'+$('#bg',el).value+'"/><path fill="'+$('#fg',el).value+'" d="'+d+'"/></svg>'};
+  if(!preset)$('#ty',el).onchange=e=>{type=e.target.value;fld();draw()};
+  el.addEventListener('input',e=>{if(e.target.id==='sz')$('#szv',el).textContent=e.target.value;draw()});
+  $('#dp',el).onclick=async()=>{if(!mods){toast('Create a code first');return}saveFile('qr-code.png',await canvasBlob($('#cv',el),'image/png'))};
+  $('#ds',el).onclick=()=>{if(!mods){toast('Create a code first');return}saveFile('qr-code.svg',new Blob([svgStr()],{type:'image/svg+xml'}))};
+  fld();draw();
+}
+function toolQRScan(el){
+  el.innerHTML='<div class="dz"></div><div class="panel" id="pp" hidden><img id="pv" class="preview" alt="Uploaded image" style="max-height:300px;align-self:flex-start"><div id="res"></div></div>';
+  dropzone($('.dz',el),{accept:'image/*',label:'Drop an image with a QR code',onFiles:async fs=>{
+    const pp=$('#pp',el),res=$('#res',el);pp.hidden=false;$('#pv',el).src=URL.createObjectURL(fs[0]);res.innerHTML='<p class="note">Reading…</p>';
+    if(!('BarcodeDetector' in window)){res.innerHTML='<p class="err">This browser cannot read QR codes from images. Try Chrome or Edge on Android or desktop.</p>';return}
+    try{const L=await loadImg(fs[0]);const codes=await new BarcodeDetector({formats:['qr_code']}).detect(L.img);
+      if(!codes.length){res.innerHTML='<p class="err">No QR code was found. Try a sharper, closer image.</p>';return}
+      res.innerHTML=codes.map((c,i)=>'<div class="result"><div><b>'+esc(c.rawValue)+'</b>'+(/^https?:\/\//i.test(c.rawValue)?'<span>Web link, open it only if you trust the source.</span>':'')+'</div><button class="btn sm" data-c="'+i+'">Copy</button></div>').join('');
+      $$('[data-c]',res).forEach(b=>b.onclick=()=>copy(codes[+b.dataset.c].rawValue))}
+    catch(e){res.innerHTML='<p class="err">The image could not be scanned.</p>'}}});
+}
+
+/* ---------- Calculators ---------- */
+function calcEval(str,deg){
+  const s=str.replace(/×/g,'*').replace(/÷/g,'/').replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/−/g,'-').replace(/\s+/g,'');
+  let i=0;const rad=x=>deg?x*Math.PI/180:x,back=x=>deg?x*180/Math.PI:x;
+  const F={sin:x=>Math.sin(rad(x)),cos:x=>Math.cos(rad(x)),tan:x=>Math.tan(rad(x)),asin:x=>back(Math.asin(x)),acos:x=>back(Math.acos(x)),atan:x=>back(Math.atan(x)),sqrt:Math.sqrt,ln:Math.log,log:Math.log10,abs:Math.abs,exp:Math.exp};
+  const C={pi:Math.PI,e:Math.E};
+  function expr(){let v=term();for(;;){if(s[i]==='+'){i++;v+=term()}else if(s[i]==='-'){i++;v-=term()}else return v}}
+  function term(){let v=pow();for(;;){if(s[i]==='*'){i++;v*=pow()}else if(s[i]==='/'){i++;v/=pow()}else return v}}
+  function pow(){const b=unary();if(s[i]==='^'){i++;return Math.pow(b,pow())}return b}
+  function unary(){if(s[i]==='-'){i++;return -unary()}if(s[i]==='+'){i++;return unary()}return post()}
+  function post(){let v=atom();while(s[i]==='%'){i++;v/=100}return v}
+  function atom(){
+    if(s[i]==='('){i++;const v=expr();if(s[i]!==')')throw new Error('Missing )');i++;return v}
+    let m=/^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));if(m){i+=m[0].length;return parseFloat(m[0])}
+    m=/^[a-z]+/.exec(s.slice(i));if(m){const n=m[0];i+=n.length;if(n in C)return C[n];if(n in F){if(s[i]!=='(')throw new Error('Use '+n+'(…)');return F[n](atom())}throw new Error('Unknown '+n)}
+    throw new Error('Check the expression')}
+  const v=expr();if(i<s.length)throw new Error('Check the expression');if(!isFinite(v))throw new Error('Not a number');return +v.toPrecision(12)}
+function toolCalc(el,sci){
+  const rows=[['C','⌫','%','÷'],['7','8','9','×'],['4','5','6','-'],['1','2','3','+'],['0','.','(',')']];
+  el.innerHTML='<div class="panel" style="max-width:'+(sci?520:380)+'px"><input class="inp disp" id="ex" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Expression"><div class="res" id="rs"></div>'+
+    (sci?'<div class="row"><label class="chk"><input type="checkbox" id="dg" checked> Degrees (off = radians)</label></div><div class="keys sci">'+['sin(','cos(','tan(','√(','ln(','log(','π','e','^','abs('].map(k=>'<button class="key op" data-k="'+k+'">'+k.replace('(','')+'</button>').join('')+'</div>':'')+
+    '<div class="keys">'+rows.flat().map(k=>'<button class="key'+('÷×-+%'.includes(k)||k==='C'||k==='⌫'?' op':'')+'" data-k="'+k+'">'+(k==='-'?'−':k)+'</button>').join('')+'<button class="key eq" data-k="=" style="grid-column:1/-1">=</button></div></div>';
+  const ex=$('#ex',el),rs=$('#rs',el);
+  const live=()=>{try{rs.textContent=ex.value.trim()?'= '+calcEval(ex.value,sci?$('#dg',el).checked:true):''}catch(e){rs.textContent=''}};
+  const eq=()=>{try{const v=calcEval(ex.value,sci?$('#dg',el).checked:true);ex.value=String(v);rs.textContent=''}catch(e){rs.textContent=e.message}};
+  el.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;const k=b.dataset.k;
+    if(k==='C'){ex.value='';rs.textContent=''}else if(k==='⌫'){ex.value=ex.value.slice(0,-1);live()}else if(k==='='){eq()}else{ex.value+=k;live()}ex.focus()});
+  ex.addEventListener('input',live);ex.addEventListener('keydown',e=>{if(e.key==='Enter')eq()});
+  if(sci)$('#dg',el).onchange=live;
+}
+function toolPercent(el){
+  el.innerHTML='<div class="panel"><div class="row"><b>What is</b><div style="width:110px">'+field('a1','','type="number" value="15" step="any"')+'</div><b>% of</b><div style="width:140px">'+field('b1','','type="number" value="2400" step="any"')+'</div><b id="r1" class="big" style="font-size:22px"></b></div>'+
+  '<div class="row"><div style="width:140px">'+field('a2','','type="number" value="30" step="any"')+'</div><b>is what % of</b><div style="width:140px">'+field('b2','','type="number" value="120" step="any"')+'</div><b id="r2" class="big" style="font-size:22px"></b></div>'+
+  '<div class="row"><b>Change from</b><div style="width:140px">'+field('a3','','type="number" value="80" step="any"')+'</div><b>to</b><div style="width:140px">'+field('b3','','type="number" value="100" step="any"')+'</div><b id="r3" class="big" style="font-size:22px"></b></div></div>';
+  const n=id=>parseFloat($('#'+id,el).value),f=v=>isFinite(v)?(+v.toFixed(4)).toLocaleString():'–';
+  const run=()=>{$('#r1',el).textContent='= '+f(n('a1')/100*n('b1'));$('#r2',el).textContent='= '+f(n('a2')/n('b2')*100)+'%';const c=(n('b3')-n('a3'))/Math.abs(n('a3'))*100;$('#r3',el).textContent='= '+(isFinite(c)?(c>0?'+':'')+f(c)+'%':'–')};
+  el.addEventListener('input',run);run();
+}
+function toolDiscount(el){
+  el.innerHTML='<div class="panel"><div class="grid2">'+field('p','Original price','type="number" value="4500" min="0" step="any"')+field('d','Discount (%)','type="number" value="20" min="0" max="100" step="any"')+field('t','Tax (%) optional','type="number" value="0" min="0" step="any"')+'</div><div class="stats" id="o"></div></div>';
+  const run=()=>{const p=+$('#p',el).value,d=+$('#d',el).value,t=+$('#t',el).value,sv=p*d/100,after=p-sv,tax=after*t/100,fin=after+tax,f=v=>(+v.toFixed(2)).toLocaleString();
+    $('#o',el).innerHTML=[['You save',f(sv)],['Price after discount',f(after)],['Tax',f(tax)],['Final price',f(fin)]].map((s,i)=>'<div class="stat'+(i===3?' f':'')+'"><b>'+s[1]+'</b><span>'+s[0]+'</span></div>').join('')};
+  el.addEventListener('input',run);run();
+}
+function ymd(a,b){if(a>b)[a,b]=[b,a];let y=b.getFullYear()-a.getFullYear(),m=b.getMonth()-a.getMonth(),d=b.getDate()-a.getDate();if(d<0){m--;d+=new Date(b.getFullYear(),b.getMonth(),0).getDate()}if(m<0){y--;m+=12}return{y,m,d}}
+const dparse=v=>v?new Date(v+'T00:00:00'):null;
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function toolAge(el){
+  const today=new Date();
+  el.innerHTML='<div class="panel">'+field('b','Date of birth','type="date" value="'+(today.getFullYear()-25)+'-03-15"')+field('on','Age on date','type="date" value="'+iso(today)+'"')+'<div class="stats" id="o"></div></div>';
+  const run=()=>{const b=dparse($('#b',el).value),t=dparse($('#on',el).value),o=$('#o',el);if(!b||!t){o.innerHTML='';return}
+    if(b>t){o.innerHTML='<p class="err">Birth date is after the selected date.</p>';return}
+    const a=ymd(b,t);let nb=new Date(t.getFullYear(),b.getMonth(),b.getDate());if(nb<t)nb=new Date(t.getFullYear()+1,b.getMonth(),b.getDate());
+    const days=Math.round((t-b)/864e5),nd=Math.round((nb-t)/864e5);
+    o.innerHTML=[[a.y+' y '+a.m+' m '+a.d+' d','Your age'],[days.toLocaleString(),'Total days'],[Math.floor(days/7).toLocaleString(),'Total weeks'],[nd===0?'Today!':nd+' days','Until next birthday']].map((s,i)=>'<div class="stat'+(i===0?' f':'')+'"><b style="font-size:'+(i===0?20:24)+'px">'+s[0]+'</b><span>'+s[1]+'</span></div>').join('')};
+  el.addEventListener('input',run);run();
+}
+function toolDateDiff(el){
+  const t=new Date(),e=new Date(t.getFullYear(),t.getMonth(),t.getDate()+45);
+  el.innerHTML='<div class="panel"><div class="grid2">'+field('a','From','type="date" value="'+iso(t)+'"')+field('b','To','type="date" value="'+iso(e)+'"')+'</div><div class="stats" id="o"></div></div>';
+  const run=()=>{const a=dparse($('#a',el).value),b=dparse($('#b',el).value),o=$('#o',el);if(!a||!b){o.innerHTML='';return}
+    const d=ymd(a,b),days=Math.round(Math.abs(b-a)/864e5);
+    o.innerHTML=[[d.y+' y '+d.m+' m '+d.d+' d','Difference'],[days.toLocaleString(),'Days'],[(days/7).toFixed(1),'Weeks'],[(days*24).toLocaleString(),'Hours']].map((s,i)=>'<div class="stat'+(i===0?' f':'')+'"><b style="font-size:'+(i===0?20:24)+'px">'+s[0]+'</b><span>'+s[1]+'</span></div>').join('')};
+  el.addEventListener('input',run);run();
+}
+function toolBMI(el){
+  el.innerHTML='<div class="panel"><label class="lbl">Units<select id="u"><option value="m">Metric (cm, kg)</option><option value="i">Imperial (ft, in, lb)</option></select></label><div id="in" class="grid2"></div><div id="o" class="stats"></div><div class="meter"><i id="mt"></i></div></div>';
+  const draw=()=>{$('#in',el).innerHTML=$('#u',el).value==='m'?field('h','Height (cm)','type="number" value="170" step="any"')+field('w','Weight (kg)','type="number" value="68" step="any"'):field('ft','Feet','type="number" value="5"')+field('inch','Inches','type="number" value="7"')+field('w','Weight (lb)','type="number" value="150" step="any"')};
+  const run=()=>{const m=$('#u',el).value==='m';let h,w=+$('#w',el).value;
+    if(m)h=+$('#h',el).value/100;else{h=((+$('#ft',el).value||0)*12+(+$('#inch',el).value||0))*.0254;w*=.45359237}
+    const o=$('#o',el);if(!(h>0&&w>0)){o.innerHTML='';return}
+    const b=w/(h*h),cat=b<18.5?'Underweight':b<25?'Normal weight':b<30?'Overweight':'Obese',lo=18.5*h*h,hi=24.9*h*h;
+    const conv=v=>m?v.toFixed(1)+' kg':(v/.45359237).toFixed(0)+' lb';
+    o.innerHTML='<div class="stat f"><b>'+b.toFixed(1)+'</b><span>BMI</span></div><div class="stat"><b style="font-size:20px">'+cat+'</b><span>Category (WHO)</span></div><div class="stat"><b style="font-size:20px">'+conv(lo)+' – '+conv(hi)+'</b><span>Healthy range for your height</span></div>';
+    const mt=$('#mt',el);mt.style.width=Math.min(100,Math.max(4,(b-10)/30*100))+'%';mt.style.background=b<18.5||b>=30?'var(--err)':b<25?'var(--ok)':'#d08a00'};
+  $('#u',el).onchange=()=>{draw();run()};el.addEventListener('input',run);draw();run();
+  el.insertAdjacentHTML('beforeend','<p class="note">BMI is a general screening number, not a diagnosis. Talk to a doctor about your health.</p>');
+}
+function toolTime(el){
+  el.innerHTML='<div class="split"><div class="panel"><h3>Add or subtract time</h3>'+field('s','Start time','type="time" value="09:30"')+'<div class="grid2"><label class="lbl">Operation<select id="op"><option value="1">Add</option><option value="-1">Subtract</option></select></label>'+field('hh','Hours','type="number" value="2" min="0"')+field('mm','Minutes','type="number" value="45" min="0"')+'</div><div class="big" id="r1"></div></div>'+
+  '<div class="panel"><h3>Time between two times</h3>'+field('a','From','type="time" value="22:15"')+field('b','To','type="time" value="06:40"')+'<div class="big" id="r2"></div><p class="note">If the end time is earlier, it counts as the next day.</p></div></div>';
+  const p=v=>{const [h,m]=v.split(':').map(Number);return h*60+m},fm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+  const run=()=>{const s=$('#s',el).value;if(s){const tot=p(s)+(+$('#op',el).value)*((+$('#hh',el).value||0)*60+(+$('#mm',el).value||0)),day=Math.floor(tot/1440),r=((tot%1440)+1440)%1440;
+      $('#r1',el).textContent=fm(r)+(day>0?'  (+'+day+' day)':day<0?'  ('+day+' day)':'')}
+    const a=$('#a',el).value,b=$('#b',el).value;if(a&&b){let d=p(b)-p(a);if(d<0)d+=1440;$('#r2',el).textContent=Math.floor(d/60)+' h '+d%60+' min'}};
+  el.addEventListener('input',run);run();
+}
+const UNITS={
+  length:{m:1,mm:.001,cm:.01,km:1000,in:.0254,ft:.3048,yd:.9144,mi:1609.344},
+  weight:{kg:1,mg:1e-6,g:.001,t:1000,oz:.028349523125,lb:.45359237,st:6.35029318},
+  temperature:{C:1,F:1,K:1},
+  area:{'m²':1,'cm²':1e-4,'km²':1e6,'ft²':.09290304,acre:4046.8564224,hectare:1e4},
+  volume:{L:1,mL:.001,'gal (US)':3.785411784,cup:.2365882365,'fl oz':.0295735295625},
+  speed:{'m/s':1,'km/h':1/3.6,mph:.44704,knot:.514444},
+  data:{B:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776}};
+function convUnit(cat,v,f,t){
+  if(cat==='temperature'){const c=f==='C'?v:f==='F'?(v-32)*5/9:v-273.15;return t==='C'?c:t==='F'?c*9/5+32:c+273.15}
+  return v*UNITS[cat][f]/UNITS[cat][t]}
+const fnum=n=>!isFinite(n)?'–':n===0?'0':Math.abs(n)>=1e-6&&Math.abs(n)<1e15?n.toLocaleString(undefined,{maximumSignificantDigits:10}):n.toExponential(5);
+function toolUnits(el,preset){
+  let cat=preset||'length';
+  el.innerHTML='<div class="panel">'+(preset?'':'<label class="lbl">Category<select id="ct">'+Object.keys(UNITS).map(k=>'<option>'+k+'</option>').join('')+'</select></label>')+
+   '<div class="grid2">'+field('v','Value','type="number" value="1" step="any"')+'<label class="lbl">From<select id="f"></select></label><label class="lbl">To<select id="t"></select></label></div><div class="big" id="r"></div><table class="tbl" id="tb"></table></div>';
+  const fill=()=>{const u=Object.keys(UNITS[cat]),o=u.map(k=>'<option>'+esc(k)+'</option>').join('');$('#f',el).innerHTML=o;$('#t',el).innerHTML=o;$('#t',el).selectedIndex=Math.min(1,u.length-1)};
+  const run=()=>{const v=parseFloat($('#v',el).value),f=$('#f',el).value,t=$('#t',el).value;$('#r',el).textContent=isFinite(v)?fnum(v)+' '+f+' = '+fnum(convUnit(cat,v,f,t))+' '+t:'';
+    $('#tb',el).innerHTML=isFinite(v)?Object.keys(UNITS[cat]).map(u=>'<tr><td>'+esc(u)+'</td><td>'+fnum(convUnit(cat,v,f,u))+'</td></tr>').join(''):''};
+  if(!preset)$('#ct',el).onchange=e=>{cat=e.target.value;fill();run()};
+  el.addEventListener('input',run);fill();run();
+}
+
+/* ---------- Developer tools ---------- */
+function toolJSON(el,only){
+  el.innerHTML='<label class="lbl">JSON<textarea id="in" class="ta" rows="11" spellcheck="false"></textarea></label><div class="row">'+(only?'':'<button class="btn" data-m="2">Format (2 spaces)</button><button class="btn ghost" data-m="4">Format (4 spaces)</button><button class="btn ghost" data-m="0">Minify</button><button class="btn ghost" id="cp">Copy</button>')+'<b id="st"></b></div>'+(only?'<div class="stats" id="sx"></div>':'');
+  const inp=$('#in',el),st=$('#st',el);
+  const depth=v=>v&&typeof v==='object'?1+Math.max(0,...Object.values(v).map(depth)):0,keys=v=>v&&typeof v==='object'?Object.keys(v).length+Object.values(v).reduce((a,b)=>a+keys(b),0):0;
+  const check=()=>{const t=inp.value;if(!t.trim()){st.textContent='';if(only)$('#sx',el).innerHTML='';return null}
+    try{const v=JSON.parse(t);st.className='okk';st.textContent='✓ Valid JSON';
+      if(only)$('#sx',el).innerHTML=[[Array.isArray(v)?'Array':typeof v==='object'&&v?'Object':typeof v,'Root type'],[keys(v),'Keys and items'],[depth(v),'Nesting depth'],[fsize(new Blob([t]).size),'Size']].map(s=>'<div class="stat"><b style="font-size:20px">'+s[0]+'</b><span>'+s[1]+'</span></div>').join('');
+      return{v}}
+    catch(e){let m=e.message,p=m.match(/position (\d+)/);if(p){const b=t.slice(0,+p[1]).split('\n');m+=' (line '+b.length+', column '+(b[b.length-1].length+1)+')'}st.className='err';st.textContent='✗ '+m;if(only)$('#sx',el).innerHTML='';return null}};
+  inp.value='{"site":"HT Smart Tools","free":true,"categories":["pdf","image","text"],"owner":{"name":"Hamza"}}';
+  inp.oninput=check;check();
+  $$('[data-m]',el).forEach(b=>b.onclick=()=>{const r=check();if(r)inp.value=JSON.stringify(r.v,null,+b.dataset.m||undefined)});
+  if(!only)$('#cp',el).onclick=()=>copy(inp.value);
+}
+const b64e=s=>{const b=new TextEncoder().encode(s);let r='';for(let i=0;i<b.length;i+=0x8000)r+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(r)};
+const b64d=s=>{const r=atob(s.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/'));return new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(r,c=>c.charCodeAt(0)))};
+function toolBase64(el){textIO(el,{sample:'Hello from HT Smart Tools',opts:'<label class="lbl">Mode<select name="m"><option value="e">Encode to Base64</option><option value="d">Decode from Base64</option></select></label>',
+  fn:(t,g)=>{if(!t)return '';try{return g('m')==='e'?b64e(t):b64d(t)}catch(e){return{text:'',note:'This is not valid Base64.'}}}})}
+function toolURLenc(el){textIO(el,{sample:'https://example.com/search?q=اردو ٹولز&lang=ur',opts:'<label class="lbl">Mode<select name="m"><option value="e">Encode</option><option value="d">Decode</option></select></label><label class="chk"><input type="checkbox" name="full"> Keep URL characters (: / ? & =)</label>',
+  fn:(t,g)=>{try{return g('m')==='e'?(g('full')?encodeURI(t):encodeURIComponent(t)):(g('full')?decodeURI(t):decodeURIComponent(t))}catch(e){return{text:'',note:'This text cannot be decoded.'}}}})}
+function toolEntity(el){textIO(el,{sample:'<p class="note">Fish & Chips © 2026</p>',opts:'<label class="lbl">Mode<select name="m"><option value="e">Encode</option><option value="d">Decode</option></select></label>',
+  fn:(t,g)=>g('m')==='e'?t.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])).replace(/[^\x00-\x7F]/gu,c=>'&#'+c.codePointAt(0)+';'):new DOMParser().parseFromString(t,'text/html').documentElement.textContent})}
+function uuid(){if(crypto.randomUUID)return crypto.randomUUID();const b=crypto.getRandomValues(new Uint8Array(16));b[6]=b[6]&15|64;b[8]=b[8]&63|128;const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20)}
+function toolUUID(el){
+  el.innerHTML='<div class="panel"><div class="grid2">'+field('n','How many (1–100)','type="number" min="1" max="100" value="5"')+'</div><div class="row"><label class="chk"><input type="checkbox" id="up"> Uppercase</label><label class="chk"><input type="checkbox" id="nh"> Remove hyphens</label></div><textarea class="ta" id="o" rows="8" readonly></textarea><div class="row"><button class="btn" id="g">Generate new</button><button class="btn ghost" id="cp">Copy all</button></div></div>';
+  const gen=()=>{const n=Math.min(100,Math.max(1,+$('#n',el).value||1));$('#o',el).value=Array.from({length:n},()=>{let u=uuid();if($('#up',el).checked)u=u.toUpperCase();if($('#nh',el).checked)u=u.replace(/-/g,'');return u}).join('\n')};
+  $('#g',el).onclick=gen;$('#cp',el).onclick=()=>copy($('#o',el).value);el.addEventListener('change',gen);gen();
+}
+function toolColor(el){
+  el.innerHTML='<div class="split"><div class="panel"><label class="lbl">Pick a color<input type="color" id="pk" value="#2155e6" style="height:96px"></label>'+field('hx','HEX','value="#2155e6" maxlength="7"')+'<div class="sw" id="sw"></div></div><div class="panel" id="vals"></div></div>';
+  const toRGB=h=>{const m=/^#?([0-9a-f]{6})$/i.exec(h);if(!m)return null;const n=parseInt(m[1],16);return[n>>16,n>>8&255,n&255]};
+  const toHSL=([r,g,b])=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h*=60}return[Math.round(h),Math.round(s*100),Math.round(l*100)]};
+  const hex=a=>'#'+a.map(x=>x.toString(16).padStart(2,'0')).join('');
+  const show=h=>{const rgb=toRGB(h);if(!rgb)return;const hs=toHSL(rgb),H=hex(rgb).toUpperCase();
+    const vals=[['HEX',H],['RGB','rgb('+rgb.join(', ')+')'],['HSL','hsl('+hs[0]+', '+hs[1]+'%, '+hs[2]+'%)']];
+    $('#vals',el).innerHTML='<div style="height:90px;border-radius:14px;border:1px solid var(--line);background:'+H+'"></div>'+vals.map(v=>'<div class="result" style="border-color:var(--line);background:none"><div><span>'+v[0]+'</span><b>'+v[1]+'</b></div><button class="btn ghost sm" data-v="'+esc(v[1])+'">Copy</button></div>').join('');
+    $('#sw',el).innerHTML=[20,35,50,65,80].map(l=>{const c='hsl('+hs[0]+','+hs[1]+'%,'+l+'%)';return '<i style="background:'+c+'" title="'+c+'"></i>'}).join('');
+    $$('[data-v]',el).forEach(b=>b.onclick=()=>copy(b.dataset.v))};
+  $('#pk',el).oninput=e=>{$('#hx',el).value=e.target.value;show(e.target.value)};
+  $('#hx',el).oninput=e=>{const v=e.target.value.startsWith('#')?e.target.value:'#'+e.target.value;if(toRGB(v)){$('#pk',el).value=v.toLowerCase();show(v)}};
+  show('#2155e6');
+}
+const COMMON=['password','123456','12345678','qwerty','letmein','admin','welcome','iloveyou','abc123','111111','pakistan','monkey','dragon','login','passw0rd'];
+function toolPassword(el){
+  el.innerHTML='<div class="panel"><label class="lbl">Password to check<input class="inp" id="pw" type="password" autocomplete="off" placeholder="Type a password"></label><label class="chk"><input type="checkbox" id="sh"> Show password</label><div class="meter"><i id="mt" style="width:0"></i></div><div class="stats" id="o"></div><ul id="tips" class="note" style="margin:0;padding-inline-start:18px"></ul><p class="note">This check runs only in your browser. The password is never sent or stored.</p></div>';
+  const run=()=>{const p=$('#pw',el).value,mt=$('#mt',el);
+    if(!p){mt.style.width='0';$('#o',el).innerHTML='';$('#tips',el).innerHTML='';return}
+    let pool=0;if(/[a-z]/.test(p))pool+=26;if(/[A-Z]/.test(p))pool+=26;if(/\d/.test(p))pool+=10;if(/[^a-zA-Z0-9]/.test(p))pool+=32;
+    let bits=p.length*Math.log2(pool||1);const tips=[];
+    if(COMMON.some(c=>p.toLowerCase().includes(c))){bits=Math.min(bits,20);tips.push('Contains a very common password or word.')}
+    if(/(.)\1{2,}/.test(p)){bits*=.75;tips.push('Avoid repeating the same character.')}
+    if(/(0123|1234|2345|3456|4567|5678|6789|abcd|qwer|asdf)/i.test(p)){bits*=.75;tips.push('Avoid keyboard or number sequences.')}
+    if(p.length<12)tips.push('Use at least 12 characters.');if(!/[A-Z]/.test(p)||!/[a-z]/.test(p))tips.push('Mix upper and lower case letters.');if(!/\d/.test(p))tips.push('Add numbers.');if(!/[^a-zA-Z0-9]/.test(p))tips.push('Add a symbol.');
+    const lv=bits<28?0:bits<40?1:bits<60?2:bits<80?3:4,L=['Very weak','Weak','Fair','Strong','Very strong'][lv],col=['var(--err)','var(--err)','#d08a00','var(--ok)','var(--ok)'][lv];
+    const sec=Math.pow(2,bits)/2/1e10,H=s=>s<1?'instantly':s<60?Math.round(s)+' seconds':s<3600?Math.round(s/60)+' minutes':s<86400?Math.round(s/3600)+' hours':s<3.15e7?Math.round(s/86400)+' days':s<3.15e9?Math.round(s/3.15e7)+' years':'centuries or more';
+    mt.style.width=(lv+1)*20+'%';mt.style.background=col;
+    $('#o',el).innerHTML='<div class="stat f"><b style="color:'+col+';font-size:22px">'+L+'</b><span>Strength</span></div><div class="stat"><b style="font-size:22px">'+Math.round(bits)+' bits</b><span>Estimated entropy</span></div><div class="stat"><b style="font-size:18px">'+H(sec)+'</b><span>Offline guessing at 10 billion/s</span></div>';
+    $('#tips',el).innerHTML=tips.map(t=>'<li>'+t+'</li>').join('')};
+  $('#pw',el).oninput=run;$('#sh',el).onchange=e=>$('#pw',el).type=e.target.checked?'text':'password';
+}
+
+/* ---------- tool registry ---------- */
+const TOOLS=[];
+function tool(cat,id,name,desc,run,o={}){TOOLS.push(Object.assign({cat,id,name,desc,run},o))}
+tool('pdf','merge-pdf','Merge PDF','Combine several PDF files into one.',toolMerge,{pop:1,kw:'combine join pdf'});
+tool('pdf','split-pdf','Split PDF','Split a PDF into separate files by page ranges.',toolSplit,{kw:'separate divide'});
+tool('pdf','jpg-to-pdf','JPG to PDF','Turn images into a single PDF.',toolJpgPdf,{pop:1,kw:'image png photo to pdf'});
+tool('pdf','rotate-pdf','Rotate PDF','Rotate all or selected pages.',toolRotatePdf,{kw:'turn pages'});
+tool('pdf','delete-pdf-pages','Delete PDF Pages','Remove the pages you do not need.',toolDelete,{kw:'remove pages'});
+tool('pdf','extract-pdf-pages','Extract PDF Pages','Save selected pages as a new PDF.',toolExtract,{kw:'select pages'});
+tool('image','image-compressor','Image Compressor','Shrink image file size with adjustable quality.',toolCompress,{pop:1,kw:'reduce size jpg webp optimize'});
+tool('image','image-resizer','Image Resizer','Change image width and height.',toolResize,{pop:1,kw:'scale dimensions pixels'});
+tool('image','image-cropper','Image Cropper','Cut an image to the exact area you want.',toolCrop,{kw:'cut trim'});
+tool('image','jpg-to-png','JPG to PNG','Convert JPG images to PNG.',el=>toolConvert(el,{accept:'.jpg,.jpeg,image/jpeg',target:'image/png',label:'Drop a JPG image here'}),{kw:'jpeg convert'});
+tool('image','png-to-jpg','PNG to JPG','Convert PNG images to JPG.',el=>toolConvert(el,{accept:'.png,image/png',target:'image/jpeg',label:'Drop a PNG image here'}),{kw:'convert jpeg'});
+tool('image','webp-converter','WEBP Converter','Convert images to or from WEBP.',el=>toolConvert(el,{accept:'image/*',label:'Drop an image here'}),{kw:'convert format'});
+tool('image','image-rotator','Image Rotator','Rotate and flip images.',toolRotateImg,{kw:'flip turn mirror'});
+tool('text','word-counter','Word Counter','Count words, characters and reading time.',el=>toolCounter(el,'words'),{pop:1,kw:'count words characters'});
+tool('text','character-counter','Character Counter','Count characters with and without spaces.',el=>toolCounter(el,'chars'),{kw:'letters count'});
+tool('text','sentence-counter','Sentence Counter','Count sentences and paragraphs.',el=>toolCounter(el,'sent'),{kw:'paragraph count'});
+tool('text','case-converter','Case Converter','Change text case: upper, lower, title and more.',el=>toolCase(el),{pop:1,kw:'uppercase lowercase title camel snake'});
+tool('text','uppercase-converter','Uppercase Converter','Turn text into UPPERCASE.',el=>toolCase(el,'upper'),{kw:'capital letters'});
+tool('text','lowercase-converter','Lowercase Converter','Turn text into lowercase.',el=>toolCase(el,'lower'),{kw:'small letters'});
+tool('text','remove-extra-spaces','Remove Extra Spaces','Clean repeated spaces and blank lines.',toolSpaces,{kw:'whitespace trim clean'});
+tool('text','text-reverser','Text Reverser','Reverse characters, words or lines.',toolReverse,{kw:'backwards flip'});
+tool('text','duplicate-line-remover','Duplicate Line Remover','Remove repeated lines from a list.',toolDedupe,{kw:'unique dedupe list'});
+tool('text','text-formatter','Text Formatter','Sort, trim, number and tidy lines of text.',toolFormatter,{kw:'sort lines number'});
+tool('qr','qr-code-generator','QR Code Generator','Create QR codes for links, text, Wi-Fi and more.',el=>toolQR(el),{pop:1,isNew:1,kw:'barcode create'});
+tool('qr','qr-code-scanner','QR Code Scanner','Read a QR code from an image.',toolQRScan,{isNew:1,kw:'read decode'});
+tool('qr','url-to-qr','URL to QR','Make a QR code from a web address.',el=>toolQR(el,'url'),{kw:'link website'});
+tool('qr','wifi-qr','Wi-Fi QR','Let guests join your Wi-Fi by scanning.',el=>toolQR(el,'wifi'),{kw:'wireless network password'});
+tool('qr','text-to-qr','Text to QR','Put any text into a QR code.',el=>toolQR(el,'text'),{kw:'message'});
+tool('qr','email-qr','Email QR','QR code that opens a new email.',el=>toolQR(el,'email'),{kw:'mail'});
+tool('qr','phone-qr','Phone Number QR','QR code that starts a phone call.',el=>toolQR(el,'phone'),{kw:'call mobile'});
+tool('calc','standard-calculator','Standard Calculator','Quick everyday arithmetic.',el=>toolCalc(el,false),{kw:'math add subtract'});
+tool('calc','scientific-calculator','Scientific Calculator','Trig, logs, powers and roots.',el=>toolCalc(el,true),{kw:'sin cos tan log sqrt'});
+tool('calc','percentage-calculator','Percentage Calculator','Find percentages and percent change.',toolPercent,{pop:1,kw:'percent increase decrease'});
+tool('calc','discount-calculator','Discount Calculator','Work out sale prices, savings and tax.',toolDiscount,{pop:1,kw:'sale price off'});
+tool('calc','age-calculator','Age Calculator','Exact age in years, months and days.',toolAge,{pop:1,isNew:1,kw:'birthday date of birth'});
+tool('calc','date-difference-calculator','Date Difference Calculator','Days between two dates.',toolDateDiff,{isNew:1,kw:'days between'});
+tool('calc','time-calculator','Time Calculator','Add, subtract and compare times.',toolTime,{kw:'hours minutes duration'});
+tool('calc','bmi-calculator','BMI Calculator','Check body mass index in metric or imperial.',toolBMI,{kw:'weight height health'});
+tool('calc','unit-converter','Unit Converter','Convert length, weight, area, volume, speed and data.',el=>toolUnits(el),{kw:'convert measurement'});
+tool('calc','length-converter','Length Converter','Meters, feet, inches, miles and more.',el=>toolUnits(el,'length'),{kw:'distance km'});
+tool('calc','weight-converter','Weight Converter','Kilograms, pounds, ounces and more.',el=>toolUnits(el,'weight'),{kw:'mass kg lb'});
+tool('calc','temperature-converter','Temperature Converter','Celsius, Fahrenheit and Kelvin.',el=>toolUnits(el,'temperature'),{kw:'celsius fahrenheit kelvin'});
+tool('dev','json-formatter','JSON Formatter','Beautify, minify and validate JSON.',el=>toolJSON(el),{pop:1,kw:'pretty print beautify'});
+tool('dev','json-validator','JSON Validator','Check JSON and see exactly where it breaks.',el=>toolJSON(el,true),{kw:'lint syntax check'});
+tool('dev','base64-encoder-decoder','Base64 Encoder / Decoder','Encode text to Base64 or decode it back.',toolBase64,{kw:'b64'});
+tool('dev','url-encoder-decoder','URL Encoder / Decoder','Make text safe for URLs, or decode it.',toolURLenc,{kw:'percent encoding'});
+tool('dev','uuid-generator','UUID Generator','Generate random v4 UUIDs.',toolUUID,{kw:'guid unique id'});
+tool('dev','color-picker','Color Picker','Pick a color and copy HEX, RGB or HSL.',toolColor,{isNew:1,kw:'hex rgb hsl palette'});
+tool('dev','password-strength-checker','Password Strength Checker','Test a password privately in your browser.',toolPassword,{isNew:1,kw:'security safe'});
+tool('dev','html-entity-encoder','HTML Entity Encoder','Escape or unescape HTML special characters.',toolEntity,{kw:'escape html'});
+const SOON=[['pdf','Compress PDF','Needs the server-side engine (Flask phase).'],['pdf','PDF to JPG','Needs a PDF renderer, planned next.'],['image','Background Remover','Advanced feature, planned later.'],['dev','IP Information','Needs a server lookup, planned later.']];
+const byId=id=>TOOLS.find(t=>t.id===id);
+
+/* ---------- views ---------- */
+const card=t=>'<a class="card" href="#tool-'+t.id+'"><span class="ic '+t.cat+'">'+ICON[t.cat]+'</span><span class="ct"><b>'+esc(t.name)+'</b><span>'+esc(t.desc)+'</span></span>'+(t.isNew?'<i class="badge">New</i>':'')+'</a>';
+const grid=list=>'<div class="grid">'+list.map(card).join('')+'</div>';
+const countOf=c=>TOOLS.filter(t=>t.cat===c).length;
+function score(t,q){const n=t.name.toLowerCase(),h=(t.desc+' '+(t.kw||'')+' '+CATSHORT[t.cat]).toLowerCase();let s=0;for(const w of q.toLowerCase().split(/\s+/).filter(Boolean)){if(n.startsWith(w))s+=5;else if(n.includes(w))s+=3;else if(h.includes(w))s+=1;else return 0}return s}
+const find=q=>q.trim()?TOOLS.map(t=>[score(t,q),t]).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]):[];
+function searchBox(id){return '<div class="sbox">'+ICON.search+'<input id="'+id+'" type="search" autocomplete="off" placeholder="'+esc(tr('search'))+'" aria-label="'+esc(tr('search'))+'"><div class="sr" id="'+id+'-r" hidden></div></div>'}
+function bindSearch(id,onEnter){
+  const inp=$('#'+id),box=$('#'+id+'-r');if(!inp)return;let hl=-1;
+  const show=()=>{const r=find(inp.value).slice(0,6);hl=-1;if(!inp.value.trim()){box.hidden=true;return}
+    box.hidden=false;box.innerHTML=r.length?r.map(t=>'<a href="#tool-'+t.id+'"><span class="ic '+t.cat+'" style="width:34px;height:34px;border-radius:10px">'+ICON[t.cat]+'</span><span><b>'+esc(t.name)+'</b><small>'+esc(catN(t.cat))+'</small></span></a>').join(''):'<div class="none">'+esc(tr('none'))+'</div>'};
+  inp.addEventListener('input',show);
+  inp.addEventListener('keydown',e=>{const items=$$('a',box);
+    if(e.key==='ArrowDown'&&items.length){e.preventDefault();hl=(hl+1)%items.length}else if(e.key==='ArrowUp'&&items.length){e.preventDefault();hl=(hl-1+items.length)%items.length}
+    else if(e.key==='Enter'){const t=items[hl]||items[0];if(t)location.hash=t.getAttribute('href').slice(1);return}else if(e.key==='Escape'){box.hidden=true;return}else return;
+    items.forEach((a,i)=>a.classList.toggle('hl',i===hl))});
+  document.addEventListener('click',e=>{if(!e.target.closest('.sbox'))box.hidden=true});
+}
+function faqHtml(){return TX[LANG].q.map(x=>'<details><summary>'+esc(x[0])+'</summary><p>'+esc(x[1])+'</p></details>').join('')}
+function viewHome(){
+  const used=store.get('ht-used',[]).map(byId).filter(Boolean).slice(0,4),favs=store.get('ht-favs',[]).map(byId).filter(Boolean).slice(0,4);
+  return '<section class="hero"><span class="eyebrow">'+esc(tr('badge'))+'</span><h1>'+esc(tr('heroH'))+'</h1><p>'+esc(tr('heroP'))+'</p>'+searchBox('hs')+
+   '<div class="chips">'+CATS.map(c=>'<a class="chip" href="#cat-'+c+'">'+esc(catN(c))+'</a>').join('')+'</div></section>'+
+   (favs.length?'<section class="blk"><div class="sh"><h2>'+esc(tr('favs'))+'</h2></div>'+grid(favs)+'</section>':'')+
+   (used.length?'<section class="blk"><div class="sh"><h2>'+esc(tr('used'))+'</h2></div>'+grid(used)+'</section>':'')+
+   '<section class="blk"><div class="sh"><h2>'+esc(tr('popular'))+'</h2><a href="#tools">'+esc(tr('viewAll'))+' →</a></div>'+grid(TOOLS.filter(t=>t.pop).slice(0,8))+'</section>'+
+   '<section class="blk"><div class="sh"><h2>'+esc(tr('cats'))+'</h2></div><div class="grid">'+CATS.map(c=>'<a class="card cat-card" href="#cat-'+c+'"><span class="ic '+c+'">'+ICON[c]+'</span><span class="ct"><b>'+esc(catN(c))+'</b><span>'+countOf(c)+' '+esc(tr('tools'))+'</span></span></a>').join('')+'</div></section>'+
+   '<section class="blk"><div class="sh"><h2>'+esc(tr('recent'))+'</h2></div>'+grid(TOOLS.filter(t=>t.isNew).slice(0,6))+'</section>'+
+   '<section class="blk"><div class="sh"><h2>'+esc(tr('why'))+'</h2></div><div class="why">'+TX[LANG].w.map(w=>'<div><h3>'+esc(w[0])+'</h3><p>'+esc(w[1])+'</p></div>').join('')+'</div></section>'+
+   '<section class="blk prose"><div class="sh"><h2>'+esc(tr('faq'))+'</h2></div>'+faqHtml()+'</section>';
+}
+let Q='',CATF='all';
+function viewAll(){
+  return '<div class="crumb"><a href="#home">'+esc(tr('home'))+'</a> / '+esc(tr('all'))+'</div><div class="sh"><h2>'+esc(tr('all'))+' ('+TOOLS.length+')</h2></div>'+
+   '<div style="margin-bottom:16px"><div class="sbox" style="max-width:520px;margin:0">'+ICON.search+'<input id="aq" type="search" autocomplete="off" placeholder="'+esc(tr('search'))+'" value="'+esc(Q)+'"></div></div>'+
+   '<div class="chips" style="justify-content:flex-start;margin:0 0 20px"><button class="chip" data-c="all">'+esc(tr('all'))+'</button>'+CATS.map(c=>'<button class="chip" data-c="'+c+'">'+esc(catN(c))+'</button>').join('')+'</div><div id="ag"></div>';
+}
+function bindAll(){
+  const draw=()=>{let l=find(Q);if(!Q.trim())l=TOOLS.slice();if(CATF!=='all')l=l.filter(t=>t.cat===CATF);
+    $$('.chip[data-c]').forEach(c=>c.classList.toggle('on',c.dataset.c===CATF));
+    let h=l.length?grid(l):'<p class="note">'+esc(tr('none'))+'</p>';
+    if(!Q.trim()&&CATF==='all')h+='<div class="sh" style="margin-top:36px"><h2>'+esc(tr('soon'))+'</h2></div><div class="grid">'+SOON.map(s=>'<div class="card soon"><span class="ic '+s[0]+'">'+ICON[s[0]]+'</span><span class="ct"><b>'+esc(s[1])+'</b><span>'+esc(s[2])+'</span></span></div>').join('')+'</div>';
+    $('#ag').innerHTML=h};
+  $('#aq').addEventListener('input',e=>{Q=e.target.value;draw()});$$('.chip[data-c]').forEach(c=>c.onclick=()=>{CATF=c.dataset.c;draw()});draw();
+}
+function viewCat(c){
+  return '<div class="crumb"><a href="#home">'+esc(tr('home'))+'</a> / <a href="#tools">'+esc(tr('all'))+'</a> / '+esc(catN(c))+'</div><div class="thead"><span class="ic '+c+'">'+ICON[c]+'</span><div><h1>'+esc(catN(c))+'</h1><p>'+esc(CATDESC[c])+'</p></div></div>'+grid(TOOLS.filter(t=>t.cat===c));
+}
+function viewTool(t){
+  const favs=store.get('ht-favs',[]),isFav=favs.includes(t.id);
+  const used=[t.id].concat(store.get('ht-used',[]).filter(x=>x!==t.id)).slice(0,8);store.set('ht-used',used);
+  const rel=TOOLS.filter(x=>x.cat===t.cat&&x.id!==t.id).slice(0,4);
+  return '<div class="crumb"><a href="#home">'+esc(tr('home'))+'</a> / <a href="#cat-'+t.cat+'">'+esc(catN(t.cat))+'</a> / '+esc(t.name)+'</div>'+
+   '<div class="thead"><span class="ic '+t.cat+'">'+ICON[t.cat]+'</span><div><h1>'+esc(t.name)+'</h1><p>'+esc(t.desc)+'</p></div><button class="ib fav'+(isFav?' on':'')+'" id="fv" aria-label="Favorite" aria-pressed="'+isFav+'" title="Favorite">'+ICON.star+'</button></div>'+
+   '<div class="bench" id="bench"></div>'+(rel.length?'<section class="blk"><div class="sh"><h2>'+esc(tr('related'))+'</h2></div>'+grid(rel)+'</section>':'');
+}
+const PAGES={
+ about:()=>'<div class="prose"><h1>About HT Smart Tools</h1><p>HT Smart Tools is a growing collection of free online utilities for everyday digital tasks: working with PDFs and images, cleaning text, making QR codes, doing quick calculations and handling developer chores.</p><h2>Our approach</h2><p>One website instead of many. Each tool does one job, loads fast and works on phones and desktops. Files are processed in your browser, so they stay on your device.</p><h2>Who it is for</h2><p>Students, office workers, freelancers, developers, content creators, businesses and anyone who needs a quick result without installing software.</p></div>',
+ contact:()=>'<div class="prose"><h1>Contact Us</h1><p>Questions, bug reports or tool ideas are welcome.</p><form id="cf" class="panel"><div class="grid2">'+field('cn','Your name','required')+field('ce','Email','type="email" required')+'</div><label class="lbl">Message<textarea class="ta" id="cm" rows="6" required style="font-family:var(--body)"></textarea></label><button class="btn" type="submit">Send message</button><p class="note">Preview note: messages are not delivered yet. The form will connect to the admin inbox when the backend is added.</p></form></div>',
+ privacy:()=>'<div class="prose"><h1>Privacy Policy</h1><p class="note">Draft text. Have it reviewed before public launch.</p><h2>Your files</h2><p>Tools process your files and text in your browser. They are not uploaded to our servers. If a future tool needs server processing, the file will be deleted automatically after the result is created.</p><h2>Passwords</h2><p>The Password Strength Checker works locally. The password you type is never sent or stored.</p><h2>Information we collect</h2><p>We may collect anonymous usage statistics, such as which tools are popular, and messages you send through the contact form.</p><h2>Cookies and ads</h2><p>We store your theme and language choice on your device. If advertising is added later, this policy will describe it.</p></div>',
+ terms:()=>'<div class="prose"><h1>Terms &amp; Conditions</h1><p class="note">Draft text. Have it reviewed before public launch.</p><h2>Use of the tools</h2><p>The tools are provided free of charge, as they are. You are responsible for the files you process and for having the right to use them.</p><h2>No guarantee</h2><p>We work to keep results accurate, but we cannot promise they are error free. Check important results, especially for legal, medical or financial decisions.</p><h2>Acceptable use</h2><p>Do not use the site to break the law, to harm others or to disrupt the service.</p><h2>Changes</h2><p>We may update these terms and the tools at any time.</p></div>'
+};
+function layout(inner,active){
+  const nav=[['home',tr('home')],['tools',tr('all')]].concat(CATS.map(c=>['cat-'+c,LANG==='ur'?catN(c):CATSHORT[c]]));
+  return '<header class="hdr"><div class="wrap hdr-in"><a class="logo" href="#home"><span class="mark">HT</span><span>Smart <b>Tools</b></span></a><nav class="nav" id="nav">'+nav.map(n=>'<a href="#'+n[0]+'"'+(n[0]===active?' class="on"':'')+'>'+esc(n[1])+'</a>').join('')+'</nav><div class="hdr-actions"><button class="ib" id="lang" title="Language">'+(LANG==='en'?'اردو':'EN')+'</button><button class="ib" id="theme" aria-label="Toggle dark mode">'+ICON.moon+'</button><button class="ib menu-btn" id="menu" aria-label="Menu">'+ICON.menu+'</button></div></div></header>'+
+   '<main class="wrap" id="main">'+inner+'</main><footer class="foot"><div class="wrap foot-in"><div><a class="logo" href="#home"><span class="mark">HT</span><span>Smart <b>Tools</b></span></a><p class="note" style="margin-top:10px">'+esc(tr('foot'))+'</p></div><div><h4>'+esc(tr('cats'))+'</h4>'+CATS.map(c=>'<a href="#cat-'+c+'">'+esc(catN(c))+'</a>').join('')+'</div><div><h4>HT Smart Tools</h4><a href="#about">'+esc(tr('about'))+'</a><a href="#contact">'+esc(tr('contact'))+'</a><a href="#privacy">'+esc(tr('privacy'))+'</a><a href="#terms">'+esc(tr('terms'))+'</a></div></div><div class="wrap copy">© 2026 HT Smart Tools. All rights reserved.</div></footer>';
+}
+function applyTheme(){const t=store.get('ht-theme',null);if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.removeAttribute('data-theme')}
+function route(){
+  document.documentElement.lang=LANG;document.documentElement.dir=LANG==='ur'?'rtl':'ltr';
+  let h=(location.hash||'#home').slice(1),inner,active=h,after=()=>{};
+  if(h==='home'){inner=viewHome();after=()=>bindSearch('hs')}
+  else if(h==='tools'){inner=viewAll();after=bindAll}
+  else if(h.startsWith('cat-')&&CATS.includes(h.slice(4))){inner=viewCat(h.slice(4))}
+  else if(h.startsWith('tool-')&&byId(h.slice(5))){const t=byId(h.slice(5));inner=viewTool(t);active='cat-'+t.cat;
+    after=()=>{try{t.run($('#bench'))}catch(e){$('#bench').innerHTML='<p class="err">'+esc(e.message)+'</p>'}
+      $('#fv').onclick=()=>{let f=store.get('ht-favs',[]);f=f.includes(t.id)?f.filter(x=>x!==t.id):f.concat(t.id);store.set('ht-favs',f);$('#fv').classList.toggle('on',f.includes(t.id));$('#fv').setAttribute('aria-pressed',f.includes(t.id))}}}
+  else if(PAGES[h]){inner=PAGES[h]();after=()=>{const f=$('#cf');if(f)f.onsubmit=e=>{e.preventDefault();toast('Preview only: message not sent yet.')}}}
+  else{inner='<div class="prose"><h1>Page not found</h1><p><a href="#home" style="color:var(--accent)">Go to the homepage</a></p></div>';}
+  $('#root').innerHTML=layout(inner,active);
+  $('#lang').onclick=()=>{LANG=LANG==='en'?'ur':'en';store.set('ht-lang',LANG);route()};
+  $('#theme').onclick=()=>{const dark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);store.set('ht-theme',dark?'light':'dark');applyTheme()};
+  $('#menu').onclick=()=>$('#nav').classList.toggle('open');
+  $$('#nav a').forEach(a=>a.onclick=()=>$('#nav').classList.remove('open'));
+  after();
+}
+applyTheme();
+let first=true;
+addEventListener('hashchange',()=>{route();scrollTo(0,0)});
+route();
+</script>
+</body></html>
