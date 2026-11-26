@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>HT Smart Tools</title>
-<meta name="description" content="Free online tools: merge PDF, compress images, QR code generator, word counter, calculators and developer tools. No sign-up, files stay in your browser.">
+<meta name="description" content="Free online tools: merge PDF, compress PDF, compress images, QR code generator, word counter, calculators and developer tools. No sign-up, files stay in your browser.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap">
 <style>
 /* Layout: sticky header, hero with search, card grids, tool workbench panel. Blue/white, dark mode via tokens. */
@@ -179,11 +179,18 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .foot h4{margin:0 0 8px;font-family:var(--display);font-size:14px}
 .foot a{display:block;color:var(--muted);padding:3px 0;font-size:14px}
 .foot a:hover{color:var(--accent)}
-.copy{margin-top:22px;color:var(--muted);font-size:13px}
+.foot a.logo{display:flex;color:var(--ink);padding:0}
+.copy{margin-top:22px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
+.vc{display:inline-flex;align-items:center;gap:9px;padding:7px 14px;border:1px solid var(--line);border-radius:99px;background:var(--surface2);font-size:13.5px;color:var(--muted)}
+.vc[hidden]{display:none}
+.vc i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 22%,transparent)}
+.vc b{font-family:var(--display);font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;min-width:1ch}
+.vc.load b{display:inline-block;width:58px;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--line) 25%,var(--surface) 50%,var(--line) 75%);background-size:200% 100%;animation:vcsh 1.2s linear infinite}
+@keyframes vcsh{to{background-position:-200% 0}}
 #toast{position:fixed;inset-inline:16px;bottom:max(18px,env(safe-area-inset-bottom,0px));margin-inline:auto;max-width:440px;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;z-index:90;font-size:14px;opacity:0;transform:translateY(12px);transition:.2s;pointer-events:none;text-align:center}
 #toast.show{opacity:1;transform:none}
 canvas{max-width:100%}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important;animation:none!important}}
 </style>
 </head><body>
 <div id="root"></div>
@@ -191,8 +198,58 @@ canvas{max-width:100%}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
 <script>
 "use strict";
+/* ---------- public visitor counter (Supabase) ---------- */
+// Paste your Supabase project values here (Project Settings > API).
+// The anon / publishable key is meant to be public. NEVER paste a service_role or secret key here.
+const SUPABASE_URL='https://nbpemgwyepisdeehmkjj.supabase.co';       // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_ANON_KEY='sb_publishable_vhFnUrOOkwh6f8HZ7AGFHA_SeYhp-1z';  // anon (eyJ...) or publishable (sb_publishable_...) key
+let VIS={state:'off',count:null};
+function isBot(){
+  const ua=navigator.userAgent||'';
+  return !!navigator.webdriver||/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|facebookexternalhit|pingdom|monitor|curl|wget|python|node-fetch/i.test(ua)||!/^https?:$/.test(location.protocol)||['localhost','127.0.0.1','[::1]'].includes(location.hostname);
+}
+function uuid4(){
+  if(crypto.randomUUID)return crypto.randomUUID();
+  const b=crypto.getRandomValues(new Uint8Array(16));b[6]=b[6]&15|64;b[8]=b[8]&63|128;
+  const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+function visitorId(){
+  try{let v=localStorage.getItem('ht-vid');if(!v||!/^[0-9a-f-]{36}$/i.test(v)){v=uuid4();localStorage.setItem('ht-vid',v)}return v}catch(e){return window.__htvid||(window.__htvid=uuid4())}
+}
+async function rpc(fn,body){
+  const h={'Content-Type':'application/json',apikey:SUPABASE_ANON_KEY};
+  if(SUPABASE_ANON_KEY.startsWith('eyJ'))h.Authorization='Bearer '+SUPABASE_ANON_KEY;
+  const ac=new AbortController(),t=setTimeout(()=>ac.abort(),8000);
+  try{const r=await fetch(SUPABASE_URL.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',headers:h,body:JSON.stringify(body||{}),signal:ac.signal});
+    if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}
+}
+async function initVisits(){
+  if(!SUPABASE_URL||!SUPABASE_ANON_KEY||window.__vcStarted)return;
+  window.__vcStarted=true;VIS={state:'loading',count:null};showVisits();
+  try{
+    const today=new Date().toISOString().slice(0,10);let n;
+    let last=null;try{last=localStorage.getItem('ht-last-count')}catch(e){}
+    if(!isBot()&&last!==today){n=await rpc('track_visit',{p_visitor:visitorId()});try{localStorage.setItem('ht-last-count',today)}catch(e){}}
+    else n=await rpc('get_visit_count');
+    if(typeof n!=='number'||!isFinite(n))throw new Error('bad response');
+    VIS={state:'ok',count:n};
+  }catch(e){VIS={state:'err',count:null}}
+  showVisits();
+}
+function showVisits(){
+  const e=$('#vc');if(!e)return;
+  if(VIS.state==='off'){e.hidden=true;return}
+  e.hidden=false;e.className='vc'+(VIS.state==='loading'?' load':'');
+  const label=LANG==='ur'?'کل وزیٹرز':'Total visitors';
+  e.innerHTML=VIS.state==='err'?'<span>'+(LANG==='ur'?'وزیٹر کاؤنٹر ابھی دستیاب نہیں':'Visitor count is unavailable right now')+'</span>':'<i aria-hidden="true"></i><span>'+label+'</span><b>'+(VIS.state==='ok'?VIS.count.toLocaleString('en-US'):'&nbsp;')+'</b>';
+  e.setAttribute('aria-live','polite');
+}
+
 /* ---------- helpers ---------- */
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -354,6 +411,37 @@ function toolJpgPdf(el){multiList(el,{accept:'image/*',label:'Drop images here',
       else{const W=595.28,H=841.89,m=28,s=Math.min((W-2*m)/emb.width,(H-2*m)/emb.height,1.5);const w=emb.width*s,h=emb.height*s;
         const pg=pdf.addPage([W,H]);pg.drawImage(emb,{x:(W-w)/2,y:(H-h)/2,width:w,height:h})}}
     showResult(out,'images.pdf',await pdfBytes(pdf),pdf.getPageCount()+' pages')}})}
+
+/* ---------- PDF renderer tools (pdf.js) ---------- */
+function pdfjs(){if(!window.pdfjsLib)throw new Error('The PDF renderer did not load. Check your connection and reload.');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';return pdfjsLib}
+async function openPdfJs(file){try{return await pdfjs().getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise}catch(e){if(e&&e.message&&e.message.includes('renderer'))throw e;throw new Error('This PDF could not be rendered. It may be damaged or password protected.')}}
+async function renderPage(pdf,num,scale){
+  const pg=await pdf.getPage(num);let vp=pg.getViewport({scale});
+  if(vp.width*vp.height>1.6e7){vp=pg.getViewport({scale:scale*Math.sqrt(1.6e7/(vp.width*vp.height))})}
+  const [c,x]=mkCanvas(vp.width,vp.height,'#fff');await pg.render({canvasContext:x,viewport:vp}).promise;return c}
+function toolPdfToJpg(el){pdfSingle(el,{range:true,optional:true,rangeLabel:'Pages to convert (leave empty for all pages, max 60 at a time)',placeholder:'all pages',
+  extra:'<div class="grid2"><label class="lbl">Format<select id="fm"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select></label><label class="lbl">Quality<select id="sc"><option value="1">Small (72 dpi)</option><option value="1.5">Standard (108 dpi)</option><option value="2" selected>High (144 dpi)</option><option value="3">Very high (216 dpi)</option></select></label></div>',
+  btn:'Convert to images',
+  run:async({file,n,groups,pp,out})=>{const type=$('#fm',pp).value,sc=+$('#sc',pp).value;
+    const pages=groups?[...new Set(groups.flat())].sort((a,b)=>a-b):[...Array(n).keys()];
+    if(pages.length>60)throw new Error('Please choose 60 pages or fewer at a time.');
+    const pdf=await openPdfJs(file),prog=document.createElement('p');prog.className='note';out.appendChild(prog);
+    for(let k=0;k<pages.length;k++){prog.textContent='Converting page '+(pages[k]+1)+' ('+(k+1)+' of '+pages.length+')…';
+      const c=await renderPage(pdf,pages[k]+1,sc),b=await encode(c,type,.9);
+      showResult(out,baseName(file)+'-page'+(pages[k]+1)+'.'+EXT[type],b,c.width+' × '+c.height+' px');await new Promise(r=>setTimeout(r))}
+    prog.remove()}})}
+function toolCompressPdf(el){pdfSingle(el,{
+  extra:'<label class="lbl">Compression level<select id="lv"><option value="light">Light: best quality</option><option value="medium" selected>Balanced</option><option value="strong">Strong: smallest file</option></select></label><p class="note">Each page is turned into a compressed image. This can shrink scanned or image-heavy PDFs a lot, but text in the result cannot be selected or searched. Text-only PDFs may not get smaller.</p>',
+  btn:'Compress PDF',
+  run:async({file,n,pp,out})=>{const P={light:[2,.8],medium:[1.4,.65],strong:[1,.5]}[$('#lv',pp).value];
+    if(n>80)throw new Error('Please use a PDF with 80 pages or fewer.');
+    const src=await openPdfJs(file),nd=await PL().PDFDocument.create(),prog=document.createElement('p');prog.className='note';out.appendChild(prog);
+    for(let i=1;i<=src.numPages;i++){prog.textContent='Compressing page '+i+' of '+src.numPages+'…';
+      const pg=await src.getPage(i),base=pg.getViewport({scale:1}),c=await renderPage(src,i,P[0]),b=await encode(c,'image/jpeg',P[1]);
+      const img=await nd.embedJpg(new Uint8Array(await b.arrayBuffer())),page=nd.addPage([base.width,base.height]);page.drawImage(img,{x:0,y:0,width:base.width,height:base.height});c.width=c.height=0;await new Promise(r=>setTimeout(r))}
+    prog.remove();const blob=await pdfBytes(nd),saved=Math.round((1-blob.size/file.size)*100);
+    showResult(out,baseName(file)+'-compressed.pdf',blob,fsize(file.size)+' to '+fsize(blob.size)+(saved>0?' ('+saved+'% smaller)':''));
+    if(saved<=0)out.insertAdjacentHTML('beforeend','<p class="err">This file did not get smaller. Try the Strong level, or keep your original.</p>')}})}
 
 /* ---------- Image tools ---------- */
 function mkCanvas(w,h,bg){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));const x=c.getContext('2d');if(bg){x.fillStyle=bg;x.fillRect(0,0,c.width,c.height)}return [c,x]}
@@ -678,6 +766,8 @@ function toolPassword(el){
 /* ---------- tool registry ---------- */
 const TOOLS=[];
 function tool(cat,id,name,desc,run,o={}){TOOLS.push(Object.assign({cat,id,name,desc,run},o))}
+tool('pdf','compress-pdf','Compress PDF','Reduce PDF file size by compressing its pages.',toolCompressPdf,{pop:1,isNew:1,kw:'reduce size smaller shrink'});
+tool('pdf','pdf-to-jpg','PDF to JPG','Turn PDF pages into JPG or PNG images.',toolPdfToJpg,{pop:1,isNew:1,kw:'convert images pages png'});
 tool('pdf','merge-pdf','Merge PDF','Combine several PDF files into one.',toolMerge,{pop:1,kw:'combine join pdf'});
 tool('pdf','split-pdf','Split PDF','Split a PDF into separate files by page ranges.',toolSplit,{kw:'separate divide'});
 tool('pdf','jpg-to-pdf','JPG to PDF','Turn images into a single PDF.',toolJpgPdf,{pop:1,kw:'image png photo to pdf'});
@@ -728,7 +818,7 @@ tool('dev','uuid-generator','UUID Generator','Generate random v4 UUIDs.',toolUUI
 tool('dev','color-picker','Color Picker','Pick a color and copy HEX, RGB or HSL.',toolColor,{isNew:1,kw:'hex rgb hsl palette'});
 tool('dev','password-strength-checker','Password Strength Checker','Test a password privately in your browser.',toolPassword,{isNew:1,kw:'security safe'});
 tool('dev','html-entity-encoder','HTML Entity Encoder','Escape or unescape HTML special characters.',toolEntity,{kw:'escape html'});
-const SOON=[['pdf','Compress PDF','Needs the server-side engine (Flask phase).'],['pdf','PDF to JPG','Needs a PDF renderer, planned next.'],['image','Background Remover','Advanced feature, planned later.'],['dev','IP Information','Needs a server lookup, planned later.']];
+const SOON=[['image','Background Remover','Advanced feature, planned later.'],['dev','IP Information','Needs a server lookup, planned later.']];
 const byId=id=>TOOLS.find(t=>t.id===id);
 
 /* ---------- views ---------- */
@@ -796,7 +886,7 @@ const PAGES={
 function layout(inner,active){
   const nav=[['home',tr('home')],['tools',tr('all')]].concat(CATS.map(c=>['cat-'+c,LANG==='ur'?catN(c):CATSHORT[c]]));
   return '<header class="hdr"><div class="wrap hdr-in"><a class="logo" href="#home"><span class="mark">HT</span><span>Smart <b>Tools</b></span></a><nav class="nav" id="nav">'+nav.map(n=>'<a href="#'+n[0]+'"'+(n[0]===active?' class="on"':'')+'>'+esc(n[1])+'</a>').join('')+'</nav><div class="hdr-actions"><button class="ib" id="lang" title="Language">'+(LANG==='en'?'اردو':'EN')+'</button><button class="ib" id="theme" aria-label="Toggle dark mode">'+ICON.moon+'</button><button class="ib menu-btn" id="menu" aria-label="Menu">'+ICON.menu+'</button></div></div></header>'+
-   '<main class="wrap" id="main">'+inner+'</main><footer class="foot"><div class="wrap foot-in"><div><a class="logo" href="#home"><span class="mark">HT</span><span>Smart <b>Tools</b></span></a><p class="note" style="margin-top:10px">'+esc(tr('foot'))+'</p></div><div><h4>'+esc(tr('cats'))+'</h4>'+CATS.map(c=>'<a href="#cat-'+c+'">'+esc(catN(c))+'</a>').join('')+'</div><div><h4>HT Smart Tools</h4><a href="#about">'+esc(tr('about'))+'</a><a href="#contact">'+esc(tr('contact'))+'</a><a href="#privacy">'+esc(tr('privacy'))+'</a><a href="#terms">'+esc(tr('terms'))+'</a></div></div><div class="wrap copy">© 2026 HT Smart Tools. All rights reserved.</div></footer>';
+   '<main class="wrap" id="main">'+inner+'</main><footer class="foot"><div class="wrap foot-in"><div><a class="logo" href="#home"><span class="mark">HT</span><span>Smart <b>Tools</b></span></a><p class="note" style="margin-top:10px">'+esc(tr('foot'))+'</p></div><div><h4>'+esc(tr('cats'))+'</h4>'+CATS.map(c=>'<a href="#cat-'+c+'">'+esc(catN(c))+'</a>').join('')+'</div><div><h4>HT Smart Tools</h4><a href="#about">'+esc(tr('about'))+'</a><a href="#contact">'+esc(tr('contact'))+'</a><a href="#privacy">'+esc(tr('privacy'))+'</a><a href="#terms">'+esc(tr('terms'))+'</a></div></div><div class="wrap copy"><span>© 2026 HT Smart Tools. All rights reserved.</span><div id="vc" class="vc" hidden></div></div></footer>';
 }
 function applyTheme(){const t=store.get('ht-theme',null);if(t)document.documentElement.setAttribute('data-theme',t);else document.documentElement.removeAttribute('data-theme')}
 function route(){
@@ -815,11 +905,11 @@ function route(){
   $('#theme').onclick=()=>{const dark=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);store.set('ht-theme',dark?'light':'dark');applyTheme()};
   $('#menu').onclick=()=>$('#nav').classList.toggle('open');
   $$('#nav a').forEach(a=>a.onclick=()=>$('#nav').classList.remove('open'));
-  after();
+  after();showVisits();
 }
 applyTheme();
 let first=true;
 addEventListener('hashchange',()=>{route();scrollTo(0,0)});
-route();
+route();initVisits();
 </script>
 </body></html>
